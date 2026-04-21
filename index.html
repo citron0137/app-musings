@@ -1,0 +1,146 @@
+---
+layout: null
+title: 라도훈 - Musings | 사색 노트
+description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대한 짧은 생각들
+permalink: /musings/
+---
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대한 짧은 생각들">
+    <meta name="author" content="라도훈">
+    <link rel="canonical" href="https://rahoon.site/musings/">
+
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:site_name" content="라도훈 - 백엔드 개발자">
+    <meta property="og:url" content="https://rahoon.site/musings/">
+    <meta property="og:title" content="라도훈 - Musings">
+    <meta property="og:description" content="라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대한 짧은 생각들">
+    <meta property="og:image" content="https://rahoon.site/profile/public/thumbnail-en.webp">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://rahoon.site/musings/">
+    <meta name="twitter:title" content="라도훈 - Musings">
+    <meta name="twitter:description" content="라도훈의 사색 노트">
+    <meta name="twitter:image" content="https://rahoon.site/profile/public/thumbnail-en.webp">
+
+    <title>라도훈 - Musings | 사색 노트</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-3PCKW1WMCV"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-3PCKW1WMCV');
+    </script>
+
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            const systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'dark' || (!savedTheme && systemPreference)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../profile/css/style.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 50: '#eff6ff', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' }
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300" style="visibility: hidden;">
+    <script>document.body.style.visibility = 'visible';</script>
+
+    <div class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 items-end">
+        <button id="darkModeToggle" class="h-10 px-3 rounded-full bg-primary-500 text-white shadow-lg hover:bg-primary-600 transition-all duration-300 hover:scale-110 flex items-center justify-center flex-shrink-0" title="다크모드 전환">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+        </button>
+    </div>
+
+    <!-- 뒤로가기 (상단) -->
+    <header class="fixed top-0 left-0 right-0 h-14 flex items-center px-4 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md z-40">
+        <a href="../profile/" class="inline-flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-primary-500 transition-colors font-medium">← 뒤로</a>
+    </header>
+
+    <main class="pt-24 pb-20 px-4 min-h-screen">
+        <div class="max-w-3xl mx-auto">
+            <div class="text-center mb-16">
+                <h1 class="text-3xl md:text-4xl font-bold mb-4">Musings</h1>
+                <div class="w-20 h-1 bg-primary-500 mx-auto rounded-full"></div>
+                <p class="text-gray-600 dark:text-gray-300 mt-4">개발과 일, 그리고 일상에 대한 짧은 사색</p>
+            </div>
+
+            {% assign notes = site.pages
+                | where_exp: "p", "p.path contains 'musings/'"
+                | where_exp: "p", "p.name != 'index.html'"
+                | where_exp: "p", "p.name != '00-템플릿.md'"
+                | where_exp: "p", "p.hidden != true"
+                | sort: "date"
+                | reverse %}
+
+            {% if notes == empty or notes.size == 0 %}
+            <div class="text-center py-20">
+                <p class="text-gray-500 dark:text-gray-400 text-lg mb-2">아직 작성된 노트가 없습니다.</p>
+                <p class="text-gray-400 dark:text-gray-500 text-sm">첫 번째 사색이 이곳에 쌓일 예정입니다.</p>
+            </div>
+            {% else %}
+            <div class="space-y-5">
+                {% for note in notes %}
+                <a href="{{ note.url | relative_url }}" class="block p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 hover:border-primary-500 dark:hover:border-primary-500 hover:shadow-lg transition-all duration-300 group">
+                    <div class="flex items-start justify-between mb-2 gap-4">
+                        <h2 class="text-xl font-bold group-hover:text-primary-500 dark:group-hover:text-primary-400 transition-colors">{{ note.title }}</h2>
+                        {% if note.date %}
+                        <span class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap mt-1">{{ note.date | date: "%Y.%m.%d" }}</span>
+                        {% endif %}
+                    </div>
+                    {% if note.summary %}
+                    <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">{{ note.summary }}</p>
+                    {% endif %}
+                    {% if note.tags and note.tags.size > 0 %}
+                    <div class="flex flex-wrap gap-2">
+                        {% for tag in note.tags %}
+                        <span class="px-2.5 py-0.5 text-xs rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <footer class="py-8 px-4 border-t border-gray-200 dark:border-gray-700">
+        <div class="max-w-4xl mx-auto text-center">
+            <div class="flex justify-center gap-6 mb-4">
+                <a href="https://github.com/citron0137" target="_blank" rel="noopener noreferrer" class="text-gray-600 dark:text-gray-300 hover:text-primary-500 dark:hover:text-primary-400 transition-colors text-sm">
+                    GitHub
+                </a>
+                <a href="https://linkedin.com/in/rahoon" target="_blank" rel="noopener noreferrer" class="text-gray-600 dark:text-gray-300 hover:text-primary-500 dark:hover:text-primary-400 transition-colors text-sm">
+                    LinkedIn
+                </a>
+            </div>
+            <p class="text-gray-600 dark:text-gray-300">© 라도훈. Made with Cursor and GitHub Pages</p>
+        </div>
+    </footer>
+
+    <script src="../profile/js/script.js"></script>
+</body>
+</html>
