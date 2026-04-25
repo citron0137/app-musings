@@ -25,6 +25,31 @@ const SALT = 'rahoon_musings_2026';
 const ITERATIONS = 100000;
 const KEY_LEN = 32;
 
+/**
+ * BOM 을 보고 인코딩을 자동 판별해 텍스트로 디코딩.
+ * Windows PowerShell 의 UTF-16 LE 기본 저장 같은 함정 방어.
+ */
+function readTextFileSafe(filePath) {
+  const buf = fs.readFileSync(filePath);
+  let text;
+  if (buf.length >= 3 && buf[0] === 0xEF && buf[1] === 0xBB && buf[2] === 0xBF) {
+    text = buf.slice(3).toString('utf8');
+  } else if (buf.length >= 2 && buf[0] === 0xFF && buf[1] === 0xFE) {
+    text = buf.slice(2).toString('utf16le');
+  } else if (buf.length >= 2 && buf[0] === 0xFE && buf[1] === 0xFF) {
+    const content = buf.slice(2);
+    const swapped = Buffer.alloc(content.length);
+    for (let i = 0; i < content.length - 1; i += 2) {
+      swapped[i] = content[i + 1];
+      swapped[i + 1] = content[i];
+    }
+    text = swapped.toString('utf16le');
+  } else {
+    text = buf.toString('utf8');
+  }
+  return text.replace(/^﻿/, '').replace(/\r\n/g, '\n');
+}
+
 function deriveKey(password) {
   return crypto.pbkdf2Sync(password, Buffer.from(SALT, 'utf8'), ITERATIONS, KEY_LEN, 'sha256');
 }
@@ -47,7 +72,7 @@ function loadPassword() {
     console.error(`musings/_locked/password.txt 가 없습니다.`);
     process.exit(1);
   }
-  return fs.readFileSync(PASSWORD_FILE, 'utf8').replace(/\r?\n$/, '').trim();
+  return readTextFileSafe(PASSWORD_FILE).replace(/\n+$/, '').trim();
 }
 
 function main() {

@@ -78,10 +78,11 @@ node musings/_scripts/decrypt-locked-musings.js <id> --restore
 
 - **암호화**: AES-256-GCM + PBKDF2-SHA256 (100k iterations, salt: `rahoon_musings_2026`)
 - **브라우저 복호화**: SubtleCrypto API (외부 라이브러리 없음)
-- **세션 캐시**: 같은 탭에서는 한 번 입력하면 sessionStorage 에 비번 저장. 탭 종료 시 비움
+- **인메모리 캐시만**: 비번/복호문은 JS 변수에만 저장. **새로고침 / 탭 종료 / 페이지 이동 → 재입력 필요.** 같은 페이지 세션 내에서는 한 번 입력하면 다른 잠긴 노트도 같이 풀림
 - **평문 위치**: `musings/_locked/` (gitignore + Jekyll exclude). 비번도 `MUSINGS_PASSWORD` 환경변수로 대체 가능 (스크립트에서 `musings/_locked/password.txt` 보다 우선)
 - **GitHub Pages 배포**: `.enc` 만 사이트에 올라감. 평문/비번은 로컬에서만 존재
 - **password.txt 자체는 암호화 대상에서 제외**: `encrypt-locked-musings.js` 가 `.txt` 중 `password.txt` 만 골라냄
+- **인코딩 자동 판별**: 평문/비번 파일 읽을 때 BOM 검사로 UTF-8 / UTF-8+BOM / UTF-16 LE / UTF-16 BE 자동 처리. Windows PowerShell `>` 리다이렉트가 만드는 UTF-16 LE 파일도 OK
 
 ## dashboard 와의 관계
 
