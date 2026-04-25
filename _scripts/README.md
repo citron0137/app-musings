@@ -84,6 +84,18 @@ node musings/_scripts/decrypt-locked-musings.js <id> --restore
 - **password.txt 자체는 암호화 대상에서 제외**: `encrypt-locked-musings.js` 가 `.txt` 중 `password.txt` 만 골라냄
 - **인코딩 자동 판별**: 평문/비번 파일 읽을 때 BOM 검사로 UTF-8 / UTF-8+BOM / UTF-16 LE / UTF-16 BE 자동 처리. Windows PowerShell `>` 리다이렉트가 만드는 UTF-16 LE 파일도 OK
 
+## pre-commit 무결성 검증
+
+`.githooks/pre-commit` 이 staged `.enc` 를 복호화해서 워킹트리의 평문과 일치하는지 검사. 평문 수정 후 재암호화를 까먹는 사고를 방지.
+
+설치 (한 번만):
+
+```bash
+node .githooks/install.js
+```
+
+자세한 내용: [`.githooks/README.md`](../../.githooks/README.md)
+
 ## dashboard 와의 관계
 
 이 시스템은 `dashboard/encrypt.js` 와 같은 알고리즘이지만 salt 가 다름 (`rahoon_dashboard_2025` vs `rahoon_musings_2026`). 같은 비번을 써도 도출되는 키가 달라지므로 잠긴 노트와 dashboard 비공개 데이터는 독립적으로 보호됨.
