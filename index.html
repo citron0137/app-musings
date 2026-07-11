@@ -55,14 +55,20 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         a { color: inherit; }
         main { max-width: 42rem; margin: 0 auto; padding: 0 1rem; }
 
+        /* 화면 위 절반은 비워둔다 — 여백이 이 사이트의 첫인상이다. */
         header.top {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            min-height: 50dvh;
             max-width: 42rem;
             margin: 0 auto;
-            padding: max(1.5rem, env(safe-area-inset-top)) 1rem 0;
+            padding: max(2rem, env(safe-area-inset-top)) 1rem 1.5rem;
         }
-        header.top .back { font-size: 0.875rem; color: #8b929e; text-decoration: none; }
-        header.top h1 { margin: 1.25rem 0 0.25rem; font-size: 1.5rem; letter-spacing: -0.01em; }
-        header.top p { margin: 0; font-size: 0.875rem; color: #8b929e; }
+        header.top h1 { margin: 0 0 0.4rem; font-size: 2rem; letter-spacing: -0.02em; font-weight: 600; }
+        header.top p { margin: 0 0 1.25rem; font-size: 0.9375rem; line-height: 1.6; color: #8b929e; }
+        header.top .links a { font-size: 0.875rem; color: #8b929e; text-decoration: none; }
+        header.top .links a:active { color: #d5d9df; }
 
         section { margin-top: 2.25rem; }
         .section-head {
@@ -78,14 +84,20 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         }
         .section-head .meta { font-size: 0.8125rem; color: #6b7280; }
 
+        /* 섹션 자체가 잠금 해제 버튼이다 — 하단 바에 버튼을 하나 더 두지 않는다. */
         .memo-locked {
+            display: block;
+            width: 100%;
             border: 1px dashed #2a2f3a;
             border-radius: 0.75rem;
-            padding: 1.25rem 1rem;
+            padding: 1.5rem 1rem;
+            background: transparent;
             text-align: center;
             color: #6b7280;
             font-size: 0.875rem;
         }
+        .memo-locked:active { border-color: #3a4150; background: #14171d; }
+        .memo-locked:disabled { opacity: 0.6; }
         .memo-locked[hidden] { display: none; }
         .memo-card {
             border: 1px solid #2a2f3a;
@@ -115,10 +127,9 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         .tag { font-size: 0.6875rem; color: #8b929e; background: #1c2027; border-radius: 999px; padding: 0.15rem 0.5rem; }
 
         footer {
-            max-width: 42rem; margin: 3rem auto 0; padding: 1.5rem 1rem;
-            text-align: center; border-top: 1px solid #1c2027; color: #6b7280; font-size: 0.8125rem;
+            max-width: 42rem; margin: 3.5rem auto 0; padding: 2rem 1rem;
+            text-align: center; color: #3a4150; font-size: 0.8125rem; letter-spacing: 0.1em;
         }
-        footer a { color: #8b929e; text-decoration: none; }
 
         /* 배너 — 내 기기에서만 보인다 (미전송 큐 / 토큰 만료) */
         #banners { max-width: 42rem; margin: 1rem auto 0; padding: 0 1rem; }
@@ -238,9 +249,11 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
 <body>
 
 <header class="top">
-    <a class="back" href="https://rahoon.site/profile/">← 뒤로</a>
     <h1>Musings</h1>
     <p>개발과 일, 그리고 일상에 대한 짧은 사색</p>
+    <div class="links">
+        <a href="https://www.instagram.com/rahoon1021/" target="_blank" rel="noopener noreferrer">Instagram ↗</a>
+    </div>
 </header>
 
 <div id="banners"></div>
@@ -255,7 +268,7 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
             <h2>최근 메모</h2>
             <span class="meta" id="recent-meta"></span>
         </div>
-        <div class="memo-locked" id="recent-locked">잠겨 있습니다 — 아래 <b>최근 메모</b> 버튼</div>
+        <button type="button" class="memo-locked" id="recent-locked">눌러서 열기</button>
         <div id="recent-list"></div>
     </section>
 
@@ -289,14 +302,10 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
     </section>
 </main>
 
-<footer>
-    <a href="https://www.instagram.com/rahoon1021/" target="_blank" rel="noopener noreferrer">Instagram</a>
-    <div style="margin-top:0.5rem">© 라도훈</div>
-</footer>
+<footer>— 끝 —</footer>
 
 <nav class="dock">
     <button id="open-compose" class="btn-primary">메모 쓰기</button>
-    <button id="open-recent" class="btn-ghost">최근 메모</button>
 </nav>
 
 <div id="toast"></div>
@@ -580,6 +589,7 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
             const files = await loadMemoIndex();
             if (files.length === 0) {
                 $('recent-locked').textContent = '아직 메모가 없습니다.';
+                $('recent-locked').disabled = true;
                 return;
             }
             const last = stampToDate(files[0].name.replace('.enc', ''));
@@ -685,7 +695,8 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         withPassword(save);
     });
 
-    $('open-recent').addEventListener('click', () => withPassword(showRecent));
+    // 최근 메모 섹션의 잠긴 상자 자체가 열기 버튼이다.
+    $('recent-locked').addEventListener('click', () => withPassword(showRecent));
 
     $('pw-cancel').addEventListener('click', () => closeSheet('pw-sheet'));
 
