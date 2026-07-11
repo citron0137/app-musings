@@ -5,67 +5,76 @@
 ## 디렉토리 구조
 
 ```
-musings/
+<저장소 루트>
 ├── <yyyy-mm-dd>-<slug>.md                  ← 사색 노트 본문 (커밋)
 ├── _locked/                                ← .gitignore + Jekyll exclude (절대 커밋 X)
 │   ├── password.txt                        ← 사이트 전체 단일 비밀번호 (한 줄)
 │   └── <id>.txt                            ← 평문 잠긴 노트
 ├── _scripts/                               ← Jekyll exclude (커밋 O)
+│   ├── lib/musings-crypto.js               ← 암호화 공용 모듈 (KDF 상수·포맷의 단일 출처)
 │   ├── encrypt-locked-musings.js           ← 평문 → 암호문
 │   └── decrypt-locked-musings.js           ← 암호문 → 평문 (복구용)
-└── locked/                                 ← 커밋, 사이트에 서빙됨
-    └── <id>.enc                            ← 암호문 (JSON: {iv, tag, data})
-
-_includes/locked-musing.html                ← Jekyll 인라인 토글 템플릿
+├── locked/                                 ← 커밋, 사이트에 서빙됨
+│   └── <id>.enc                            ← 암호문
+└── _includes/locked-musing.html            ← Jekyll 인라인 토글 템플릿 (브라우저 복호화)
 ```
 
-> `musings/_locked/` 와 `musings/_scripts/` 는 `_` prefix 폴더라 Jekyll 빌드에서 자동 제외 + `_config.yml` `exclude` 명시. `_locked/` 만 추가로 `.gitignore` 처리.
+> `_locked/` 와 `_scripts/` 는 `_` prefix 폴더라 Jekyll 빌드에서 자동 제외 + `_config.yml` `exclude` 명시. `_locked/` 만 추가로 `.gitignore` 처리.
+
+## 암호문 포맷
+
+```json
+{"v":2,"iter":600000,"iv":"<base64>","tag":"<base64>","data":"<base64>"}
+```
+
+- `iter` = PBKDF2 반복 횟수. **파일 안에 기록되므로** 앞으로 파라미터를 올려도 옛 파일이 그대로 열린다.
+- v1(구 포맷)은 `v`/`iter` 가 없다 → 읽을 때 100000 으로 간주.
+- 새로 암호화할 때 쓰는 값은 `_scripts/lib/musings-crypto.js` 의 `ITERATIONS` 한 곳에만 있다.
 
 ## 처음 한 번 세팅
 
 ```bash
 # 1) 비밀번호 파일 생성 (한 줄, 빈 줄/개행 포함 X)
-mkdir -p musings/_locked
-echo -n "원하는비밀번호" > musings/_locked/password.txt
+mkdir -p _locked
+echo -n "원하는비밀번호" > _locked/password.txt
 
 # 2) 평문 노트 작성
-nano musings/_locked/2026-04-22-a.txt
+nano _locked/2026-04-22-a.txt
 ```
 
 ## 잠긴 노트 추가/수정
 
 ```bash
 # 1) 평문 작성 또는 수정
-nano musings/_locked/<id>.txt
+nano _locked/<id>.txt
 
 # 2) 암호화 (모든 노트 또는 특정 id)
-node musings/_scripts/encrypt-locked-musings.js
-node musings/_scripts/encrypt-locked-musings.js <id>
+node _scripts/encrypt-locked-musings.js
+node _scripts/encrypt-locked-musings.js <id>
 
 # 3) 사색 노트 본문에 토글 삽입 (디폴트 라벨: "🔒 솔직하지만 부끄러운 감정")
-{% raw %}{% include locked-musing.html id="<id>" %}{% endraw %}
-# 라벨 바꾸고 싶을 때만 인자 추가
-{% raw %}{% include locked-musing.html id="<id>" label="🔒 다른 라벨" %}{% endraw %}
+#    {% include locked-musing.html id="<id>" %}
+#    라벨을 바꾸고 싶을 때만 label 인자 추가
 
-# 4) .enc 와 musing 본문만 커밋
-git add musings/locked/<id>.enc musings/<post>.md
+# 4) .enc 와 노트 본문만 커밋
+git add locked/<id>.enc <yyyy-mm-dd>-<slug>.md
 git commit -m "..."
 ```
 
-## 평문 복구 (혹시 `musings/_locked/` 가 날아갔을 때)
+## 평문 복구 (혹시 `_locked/` 가 날아갔을 때)
 
 ```bash
 # stdout 으로 출력
-node musings/_scripts/decrypt-locked-musings.js <id>
+node _scripts/decrypt-locked-musings.js <id>
 
-# musings/_locked/<id>.txt 로 복원
-node musings/_scripts/decrypt-locked-musings.js <id> --restore
+# _locked/<id>.txt 로 복원
+node _scripts/decrypt-locked-musings.js <id> --restore
 ```
 
 ## 비밀번호 변경
 
-1. 새 비밀번호로 `musings/_locked/password.txt` 갱신
-2. 모든 잠긴 노트 재암호화: `node musings/_scripts/encrypt-locked-musings.js`
+1. 새 비밀번호로 `_locked/password.txt` 갱신
+2. 모든 잠긴 노트 재암호화: `node _scripts/encrypt-locked-musings.js`
 3. 변경된 `.enc` 파일들 커밋
 
 ## ID 컨벤션
@@ -76,26 +85,23 @@ node musings/_scripts/decrypt-locked-musings.js <id> --restore
 
 ## 보안 메모
 
-- **암호화**: AES-256-GCM + PBKDF2-SHA256 (100k iterations, salt: `rahoon_musings_2026`)
+- **암호화**: AES-256-GCM + PBKDF2-SHA256 (600k iterations, salt: `rahoon_musings_2026`)
 - **브라우저 복호화**: SubtleCrypto API (외부 라이브러리 없음)
 - **인메모리 캐시만**: 비번/복호문은 JS 변수에만 저장. **새로고침 / 탭 종료 / 페이지 이동 → 재입력 필요.** 같은 페이지 세션 내에서는 한 번 입력하면 다른 잠긴 노트도 같이 풀림
-- **평문 위치**: `musings/_locked/` (gitignore + Jekyll exclude). 비번도 `MUSINGS_PASSWORD` 환경변수로 대체 가능 (스크립트에서 `musings/_locked/password.txt` 보다 우선)
-- **GitHub Pages 배포**: `.enc` 만 사이트에 올라감. 평문/비번은 로컬에서만 존재
+- **평문 위치**: `_locked/` (gitignore + Jekyll exclude). 비번은 `MUSINGS_PASSWORD` 환경변수로 대체 가능 (`_locked/password.txt` 보다 우선)
+- **GitHub Pages 배포**: `.enc` 만 사이트에 올라감. 평문/비번은 로컬에만 존재
+- **저장소가 public이라 암호문은 누구나 받아갈 수 있다.** 그래서 KDF 반복 횟수를 60만으로 둔다 — 오프라인 대입 공격 비용을 올리는 것이 실질적인 방어선
 - **password.txt 자체는 암호화 대상에서 제외**: `encrypt-locked-musings.js` 가 `.txt` 중 `password.txt` 만 골라냄
 - **인코딩 자동 판별**: 평문/비번 파일 읽을 때 BOM 검사로 UTF-8 / UTF-8+BOM / UTF-16 LE / UTF-16 BE 자동 처리. Windows PowerShell `>` 리다이렉트가 만드는 UTF-16 LE 파일도 OK
 
 ## pre-commit 무결성 검증
 
-`.githooks/pre-commit` 이 staged `.enc` 를 복호화해서 워킹트리의 평문과 일치하는지 검사. 평문 수정 후 재암호화를 까먹는 사고를 방지.
+`.githooks/pre-commit` 이 `locked/*.enc` 를 복호화해서 워킹트리의 평문과 일치하는지 검사. 평문 수정 후 재암호화를 까먹는 사고를 방지.
 
-설치 (한 번만):
+설치 (클론 후 한 번만):
 
 ```bash
 node .githooks/install.js
 ```
 
-자세한 내용: [`.githooks/README.md`](../../.githooks/README.md)
-
-## dashboard 와의 관계
-
-이 시스템은 `dashboard/encrypt.js` 와 같은 알고리즘이지만 salt 가 다름 (`rahoon_dashboard_2025` vs `rahoon_musings_2026`). 같은 비번을 써도 도출되는 키가 달라지므로 잠긴 노트와 dashboard 비공개 데이터는 독립적으로 보호됨.
+자세한 내용: [`.githooks/README.md`](../.githooks/README.md)

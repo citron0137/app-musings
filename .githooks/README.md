@@ -34,8 +34,7 @@ git config --unset core.hooksPath
 **동작 시스템:**
 | .enc 경로 | 평문 | 비번 (env / file) | salt |
 |---|---|---|---|
-| `musings/locked/<id>.enc` | `musings/_locked/<id>.txt` | `MUSINGS_PASSWORD` / `musings/_locked/password.txt` | `rahoon_musings_2026` |
-| `dashboard/links-private.enc` | `dashboard/_private/links-private.json` | `DASHBOARD_PASSWORD` / `dashboard/_private/password.txt` | `rahoon_dashboard_2025` |
+| `locked/<id>.enc` | `_locked/<id>.txt` | `MUSINGS_PASSWORD` / `_locked/password.txt` | `rahoon_musings_2026` |
 
 **우회 (검증 무시하고 커밋):**
 
@@ -46,8 +45,8 @@ git commit --no-verify
 **실패 메시지 예시:**
 
 ```
-[pre-commit] musings/locked/2026-04-22-a.enc: 복호화 결과가 musings/_locked/2026-04-22-a.txt 와 일치하지 않습니다.
-[pre-commit]   → 평문이 변경됐다면 'node musings/_scripts/encrypt-locked-musings.js' 로 재암호화 후 다시 커밋하세요.
+[pre-commit] locked/2026-04-22-a.enc: 복호화 결과가 _locked/2026-04-22-a.txt 와 일치하지 않습니다.
+[pre-commit]   → 평문이 변경됐다면 'node _scripts/encrypt-locked-musings.js' 로 재암호화 후 다시 커밋하세요.
 ```
 
 ## 새 훅 추가하기

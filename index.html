@@ -2,7 +2,6 @@
 layout: null
 title: 라도훈 - Musings | 사색 노트
 description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대한 짧은 생각들
-permalink: /musings/
 ---
 <!DOCTYPE html>
 <html lang="ko" class="scroll-smooth">
@@ -12,18 +11,18 @@ permalink: /musings/
     <meta name="robots" content="noindex, nofollow">
     <meta name="description" content="라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대한 짧은 생각들">
     <meta name="author" content="라도훈">
-    <link rel="canonical" href="https://rahoon.site/musings/">
+    <link rel="canonical" href="https://musings.rahoon.site/">
 
     <meta property="og:type" content="website">
     <meta property="og:locale" content="ko_KR">
-    <meta property="og:site_name" content="라도훈 - 백엔드 개발자">
-    <meta property="og:url" content="https://rahoon.site/musings/">
+    <meta property="og:site_name" content="라도훈 - Musings">
+    <meta property="og:url" content="https://musings.rahoon.site/">
     <meta property="og:title" content="라도훈 - Musings">
     <meta property="og:description" content="라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대한 짧은 생각들">
     <meta property="og:image" content="https://rahoon.site/profile/public/thumbnail-en.webp">
 
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://rahoon.site/musings/">
+    <meta name="twitter:url" content="https://musings.rahoon.site/">
     <meta name="twitter:title" content="라도훈 - Musings">
     <meta name="twitter:description" content="라도훈의 사색 노트">
     <meta name="twitter:image" content="https://rahoon.site/profile/public/thumbnail-en.webp">
@@ -51,7 +50,7 @@ permalink: /musings/
     </script>
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="../profile/css/style.css">
+    <link rel="stylesheet" href="{{ "/css/style.css" | relative_url }}">
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -76,7 +75,7 @@ permalink: /musings/
 
     <!-- 뒤로가기 (상단) -->
     <header class="fixed top-0 left-0 right-0 h-14 flex items-center px-4 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md z-40">
-        <a href="../profile/" class="inline-flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-primary-500 transition-colors font-medium">← 뒤로</a>
+        <a href="https://rahoon.site/profile/" class="inline-flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-primary-500 transition-colors font-medium">← 뒤로</a>
     </header>
 
     <main class="pt-24 pb-20 px-4 min-h-screen">
@@ -87,10 +86,13 @@ permalink: /musings/
                 <p class="text-gray-600 dark:text-gray-300 mt-4">개발과 일, 그리고 일상에 대한 짧은 사색</p>
             </div>
 
+            {%- comment -%}
+              노트는 저장소 루트의 <yyyy-mm-dd>-<제목>.md 파일들.
+              date 가 있는 페이지만 노트로 취급한다 (index.html 은 date 없음).
+              00-템플릿.md 는 hidden: true 로 걸러진다.
+            {%- endcomment -%}
             {% assign notes = site.pages
-                | where_exp: "p", "p.path contains 'musings/'"
-                | where_exp: "p", "p.name != 'index.html'"
-                | where_exp: "p", "p.name != '00-템플릿.md'"
+                | where_exp: "p", "p.date"
                 | where_exp: "p", "p.hidden != true"
                 | sort: "date"
                 | reverse %}
@@ -138,6 +140,6 @@ permalink: /musings/
         </div>
     </footer>
 
-    <script src="../profile/js/script.js"></script>
+    <script src="{{ "/js/script.js" | relative_url }}"></script>
 </body>
 </html>

@@ -26,37 +26,38 @@
   window.__lockedMusingInited = true;
 
   const SALT = 'rahoon_musings_2026';
-  const ITERATIONS = 100000;
-  const ASSET_BASE = '{{ "/musings/locked/" | relative_url }}';
+  const LEGACY_ITERATIONS = 100000;  // v1 (.enc 에 iter 필드가 없던 시절)
+  const ASSET_BASE = '{{ "/locked/" | relative_url }}';
 
   // 비번/키/평문은 모두 인메모리 캐시만 — 새로고침 시 모두 휘발 → 비번 재입력 필요
   const textCache = new Map();   // id -> 평문 (현재 페이지 세션 내)
+  const keyCache = new Map();    // "<반복수>:<비번>" -> CryptoKey
   let cachedPassword = null;
-  let cachedKey = null;
-  let cachedKeyForPw = null;
 
-  async function deriveKey(password) {
-    if (cachedKeyForPw === password && cachedKey) return cachedKey;
+  // 반복 횟수는 .enc 의 iter 필드에서 읽는다 — 파라미터를 올려도 옛 파일이 열리도록.
+  async function deriveKey(password, iterations) {
+    const cacheKey = iterations + ':' + password;
+    if (keyCache.has(cacheKey)) return keyCache.get(cacheKey);
     const enc = new TextEncoder();
     const km = await crypto.subtle.importKey(
       'raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']
     );
-    cachedKey = await crypto.subtle.deriveKey(
-      { name: 'PBKDF2', salt: enc.encode(SALT), iterations: ITERATIONS, hash: 'SHA-256' },
+    const key = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt: enc.encode(SALT), iterations: iterations, hash: 'SHA-256' },
       km,
       { name: 'AES-GCM', length: 256 },
       false,
       ['decrypt']
     );
-    cachedKeyForPw = password;
-    return cachedKey;
+    keyCache.set(cacheKey, key);
+    return key;
   }
 
   function b64(s) { return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
 
   async function decryptBlob(encJson, password) {
-    const { iv, tag, data } = JSON.parse(encJson);
-    const key = await deriveKey(password);
+    const { iv, tag, data, iter } = JSON.parse(encJson);
+    const key = await deriveKey(password, iter || LEGACY_ITERATIONS);
     const ivBuf = b64(iv);
     const tagBuf = b64(tag);
     const dataBuf = b64(data);
@@ -118,7 +119,7 @@
         return;
       } catch (e) {
         cachedPassword = null;
-        cachedKey = null; cachedKeyForPw = null;
+        keyCache.clear();
       }
     }
     showForm(el);
@@ -148,7 +149,7 @@
         input.value = '';
         input.focus();
         cachedPassword = null;
-        cachedKey = null; cachedKeyForPw = null;
+        keyCache.clear();
       }
     });
   }

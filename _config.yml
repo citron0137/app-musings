@@ -1,0 +1,38 @@
+# Jekyll / GitHub Pages 설정 — 사색 노트 (musings.rahoon.site)
+#
+# 본체(citron0137.github.io)와 완전히 분리된 자립 사이트.
+# css/js/layout 을 자체 보유하며 본체를 참조하지 않는다.
+
+title: 라도훈 - Musings
+name: 라도훈
+description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대한 짧은 생각들
+url: https://musings.rahoon.site
+baseurl: ""
+lang: ko
+author: 라도훈
+
+theme: jekyll-theme-primer
+plugins:
+  - jekyll-seo-tag
+
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: default
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - .sass-cache
+  - .jekyll-cache
+  - .jekyll-metadata
+  - 00-docs
+  - _locked
+  - _inbox
+  - _scripts
+  - .githooks
+  - README.md
