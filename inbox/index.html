@@ -96,7 +96,7 @@ permalink: /inbox/
         }
         .memo-card time { display: block; margin-bottom: 0.25rem; font-size: 0.75rem; color: #6b7280; }
         .memo-card p { margin: 0; font-size: 0.875rem; line-height: 1.6; white-space: pre-wrap; color: #d5d9df; }
-        #pw-sheet {
+        #pw-sheet, #tk-sheet {
             position: fixed;
             inset: 0;
             z-index: 50;
@@ -105,8 +105,8 @@ permalink: /inbox/
             justify-content: center;
             background: rgba(0, 0, 0, 0.65);
         }
-        #pw-sheet[data-open="1"] { display: flex; }
-        #pw-form {
+        #pw-sheet[data-open="1"], #tk-sheet[data-open="1"] { display: flex; }
+        #pw-form, #tk-form {
             width: 100%;
             max-width: 28rem;
             background: #171a21;
@@ -114,8 +114,11 @@ permalink: /inbox/
             padding: 1.25rem;
             padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
         }
-        #pw-form label { display: block; font-size: 0.875rem; color: #aeb4bf; }
-        #pw {
+        #pw-form label, #tk-form label { display: block; font-size: 0.875rem; color: #aeb4bf; }
+        .sheet-title { margin: 0 0 0.5rem; font-size: 1rem; font-weight: 600; color: #e6e8eb; }
+        .sheet-note { margin: 0 0 1rem; font-size: 0.8125rem; line-height: 1.5; color: #8b929e; }
+        .sheet-note b { color: #aeb4bf; }
+        #pw, #tk, #tk-exp {
             width: 100%;
             margin-top: 0.5rem;
             padding: 0.75rem;
@@ -127,12 +130,12 @@ permalink: /inbox/
             font-size: 1rem;
             outline: none;
         }
-        #pw:focus { border-color: #2563eb; }
-        #pw-error { margin: 0.5rem 0 0; font-size: 0.875rem; color: #f3a9a9; }
-        #pw-error[hidden] { display: none; }
+        #pw:focus, #tk:focus, #tk-exp:focus { border-color: #2563eb; }
+        #pw-error, #tk-error { margin: 0.5rem 0 0; font-size: 0.875rem; color: #f3a9a9; }
+        #pw-error[hidden], #tk-error[hidden] { display: none; }
         @media (min-width: 640px) {
-            #pw-sheet { align-items: center; }
-            #pw-form { border-radius: 1rem; }
+            #pw-sheet, #tk-sheet { align-items: center; }
+            #pw-form, #tk-form { border-radius: 1rem; }
         }
     </style>
 
@@ -172,6 +175,32 @@ permalink: /inbox/
     </form>
 </div>
 
+<!--
+  토큰 등록 — token.enc 가 없거나 만료됐을 때만 뜬다.
+  여기서 받은 토큰으로 페이지가 스스로 token.enc 를 커밋한다 (부트스트랩).
+  그래야 90일마다 오는 갱신을 노트북 없이 폰에서 끝낼 수 있다 —
+  만료가 하필 출장 중에 오면, 갱신하러 노트북에 갈 때까지 메모가 큐에만 쌓인다.
+-->
+<div id="tk-sheet">
+    <form id="tk-form">
+        <p class="sheet-title">토큰 등록</p>
+        <p class="sheet-note">
+            GitHub fine-grained PAT — <b>app-musings</b> 저장소의 <b>Contents: Read and write</b> 만.
+            만료는 <b>90일 이내</b>여야 합니다.
+        </p>
+        <label for="tk">토큰</label>
+        <input id="tk" type="password" autocomplete="off" autocapitalize="off" spellcheck="false"
+               placeholder="github_pat_…">
+        <label for="tk-exp" style="margin-top:0.75rem">만료일</label>
+        <input id="tk-exp" type="date">
+        <p id="tk-error" hidden></p>
+        <div class="row">
+            <button type="button" id="tk-cancel" class="btn-ghost" style="flex:1">취소</button>
+            <button type="submit" id="tk-ok" class="btn-primary">등록</button>
+        </div>
+    </form>
+</div>
+
 <script>
 (function () {
     'use strict';
@@ -185,6 +214,7 @@ permalink: /inbox/
     const DRAFT_KEY = 'musings.draft';  // 평문 — 작성 중에만 존재
     const QUEUE_KEY = 'musings.queue';  // 암호문 — 전송 실패분
     const EXPIRY_WARN_DAYS = 14;
+    const MAX_TOKEN_DAYS = 90;   // 암호문이 공개되므로 유효 기간이 곧 위험 노출 창이다
     const RECENT_LIMIT = 10;
 
     const $ = (id) => document.getElementById(id);
@@ -247,6 +277,13 @@ permalink: /inbox/
         pendingAction = null;
     }
 
+    /** token.enc 가 없거나 만료됐을 때 — 토큰 등록 화면으로 넘기기 위한 신호 */
+    function needsToken(message) {
+        const err = new Error(message);
+        err.needsToken = true;
+        return err;
+    }
+
     /**
      * 비번으로 token.enc 를 풀어 세션을 연다.
      * token.enc 는 서비스워커가 캐시하므로 오프라인에서도 열린다 —
@@ -254,9 +291,43 @@ permalink: /inbox/
      */
     async function openSession(password) {
         const res = await fetch(TOKEN_URL);
+        if (res.status === 404) throw needsToken('토큰이 아직 등록되지 않았습니다.');
         if (!res.ok) throw new Error('token.enc 를 불러올 수 없습니다.');
+
+        // 복호화가 실패하면 비밀번호가 틀린 것 — 토큰 등록 화면으로 보내면 안 된다.
         const payload = JSON.parse(await MusingsCrypto.decrypt(await res.text(), password));
         session = { password: password, token: payload.token, expires: payload.expires };
+        renderBanners();
+
+        if (daysUntil(payload.expires) <= 0) throw needsToken('토큰이 만료됐습니다.');
+    }
+
+    /**
+     * 토큰을 비번으로 암호화해서 token.enc 로 커밋한다 — 그 토큰 자신을 써서.
+     * 이 부트스트랩 덕분에 90일 갱신을 폰에서 끝낼 수 있다 (노트북 불필요).
+     */
+    async function registerToken(password, token, expires) {
+        const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/token.enc`;
+        const headers = {
+            Authorization: 'Bearer ' + token,
+            Accept: 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+        };
+
+        // 이미 있으면 sha 가 있어야 덮어쓸 수 있다.
+        let sha;
+        const head = await fetch(url + '?ref=main', { headers: headers });
+        if (head.ok) sha = (await head.json()).sha;
+        else if (head.status !== 404) throw new Error('토큰이 저장소에 접근하지 못합니다 (' + head.status + ').');
+
+        const enc = JSON.stringify(await MusingsCrypto.encrypt(JSON.stringify({ token: token, expires: expires }), password));
+        const body = { message: 'token.enc 갱신 (만료 ' + expires + ')', content: btoa(enc), branch: 'main' };
+        if (sha) body.sha = sha;
+
+        const res = await fetch(url, { method: 'PUT', headers: headers, body: JSON.stringify(body) });
+        if (!res.ok) throw new Error('token.enc 커밋 실패 — ' + res.status + ': ' + (await res.text()).slice(0, 120));
+
+        session = { password: password, token: token, expires: expires };
         renderBanners();
     }
 
@@ -373,6 +444,10 @@ permalink: /inbox/
         try {
             await fn();
         } catch (err) {
+            if (err.needsToken && session) {
+                askToken(session.password, fn, err.message);
+                return;
+            }
             session = null;
             MusingsCrypto.clearKeyCache();
             status.textContent = err.message;
@@ -408,6 +483,12 @@ permalink: /inbox/
             await action(pw);
             closePassword();
         } catch (err) {
+            if (err.needsToken) {
+                // 비밀번호는 맞았고 토큰만 없거나 만료된 경우 — 등록 화면으로.
+                closePassword();
+                askToken(pw, action, err.message);
+                return;
+            }
             session = null;
             MusingsCrypto.clearKeyCache();
             const error = $('pw-error');
@@ -418,6 +499,73 @@ permalink: /inbox/
             status.textContent = '';
         } finally {
             $('pw-ok').disabled = false;
+        }
+    });
+
+    // ---------- 토큰 등록 ----------
+
+    let tokenCtx = null;   // { password, retry }
+
+    function askToken(password, retry, reason) {
+        tokenCtx = { password: password, retry: retry };
+        const error = $('tk-error');
+        error.textContent = reason || '';
+        error.hidden = !reason;
+        $('tk').value = '';
+        $('tk-exp').value = '';
+        // 만료일 입력을 오늘~90일로 제한한다 — UI 에서도 상한을 강제해야 구멍이 안 생긴다.
+        const iso = (ms) => new Date(ms + 9 * 3600 * 1000).toISOString().slice(0, 10);
+        $('tk-exp').min = iso(Date.now());
+        $('tk-exp').max = iso(Date.now() + MAX_TOKEN_DAYS * 86400000);
+        $('tk-sheet').dataset.open = '1';
+        setTimeout(() => $('tk').focus(), 50);
+    }
+
+    function closeToken() {
+        $('tk-sheet').dataset.open = '';
+        $('tk').value = '';
+        tokenCtx = null;
+    }
+
+    $('tk-cancel').addEventListener('click', () => {
+        closeToken();
+        status.textContent = '토큰이 없어 전송하지 못했습니다.';
+    });
+
+    $('tk-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!tokenCtx) return;
+
+        const token = $('tk').value.trim();
+        const expires = $('tk-exp').value;
+        const error = $('tk-error');
+        const fail = (msg) => { error.textContent = msg; error.hidden = false; };
+
+        if (!token.startsWith('github_pat_')) {
+            return fail('fine-grained PAT 이 아닙니다 (github_pat_ 로 시작해야 합니다). classic 토큰은 모든 공개 저장소에 쓰기 권한이 열립니다.');
+        }
+        if (!expires) return fail('만료일을 입력하세요.');
+
+        const left = daysUntil(expires);
+        if (left <= 0) return fail('이미 지난 날짜입니다.');
+        if (left > MAX_TOKEN_DAYS) {
+            return fail(`만료가 ${left}일 뒤입니다 — ${MAX_TOKEN_DAYS}일을 넘을 수 없습니다. 토큰 암호문이 공개 저장소에 올라가므로, 유효 기간이 곧 위험 노출 창입니다.`);
+        }
+
+        $('tk-ok').disabled = true;
+        status.textContent = '토큰 등록 중…';
+        try {
+            await registerToken(tokenCtx.password, token, expires);
+            const retry = tokenCtx.retry;
+            const password = tokenCtx.password;
+            closeToken();
+            status.textContent = '토큰 등록됨';
+            if (retry) await run(() => retry(password));
+        } catch (err) {
+            fail(err.message);
+            status.textContent = '';
+        } finally {
+            $('tk-ok').disabled = false;
         }
     });
 
