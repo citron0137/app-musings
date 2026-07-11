@@ -76,13 +76,18 @@
       .prose h3 { font-size: 1.125rem; margin-top: 2.75em; }   /* 절 */
       .prose h4 { font-size: 1rem; margin-top: 2.25em; color: var(--text-2); }
 
-      /* 문단 묶음 구분 — 문단보다 크고 절(###)보다 작은 쉼.
-         글 안에 단독 <br> 로 적어둔 '숨 고르기'다. kramdown 이 <p><br /></p> 로 뱉는다.
-         :only-child 라서 문단 안 줄바꿈용 인라인 <br> 과는 겹치지 않는다. */
-      .prose p:has(> br:only-child) { margin: 0; height: 1.75rem; }
-      .prose p:has(> br:only-child) > br { display: none; }
-      /* 묶음 구분 바로 뒤에 소제목이 오면 여백이 두 번 쌓인다 */
-      .prose p:has(> br:only-child) + :is(h2, h3, h4) { margin-top: 0.75em; }
+      /* 문단 묶음 구분('숨 고르기')에 특별한 규칙을 두지 않는다.
+         글은 <br> 을 세 가지로 쓴다:
+           1. 단독 줄        → <p><br /></p>        문단보다 큰 쉼
+           2. 문장 끝에 붙임 → <p>글<br />글</p>    문단 안 줄바꿈
+           3. <br><br>       → <p><br /><br /></p>  더 큰 쉼
+         1번만 골라 높이를 고정하려고 p:has(> br:only-child) 를 썼다가 글이 겹쳤다 —
+         :only-child 는 텍스트 노드를 세지 않아서 2번까지 걸려들었고, 여러 줄짜리 문단이
+         한 줄 높이에 눌렸다. CSS 로는 '텍스트 없이 <br> 만 든 문단'을 고를 수 없다.
+
+         기본 렌더가 이미 옳다. 1번은 빈 줄상자 + 위아래 여백이 붙어 저절로 큰 쉼이 되고,
+         3번은 그보다 더 크며, 2번은 그냥 줄바꿈이다. 마크업이 리듬을 이미 담고 있다.
+         여기에 규칙을 얹지 말 것. */
 
       .prose strong { font-weight: 600; }
       .prose em { font-style: normal; color: var(--text-2); }   /* 강조가 아니라 결 */
@@ -124,13 +129,15 @@
       .prose th, .prose td { border: 1px solid var(--border); padding: 0.5rem 0.7rem; text-align: left; }
       .prose th { background: var(--surface-2); font-weight: 600; }
 
-      /* ── 이웃 글 ─────────────────────────────────────────── */
-      .pager {
-        display: flex;
-        gap: 0.75rem;
+      /* ── 글 끝 ───────────────────────────────────────────── */
+      .end {
         margin-top: 4rem;
         padding-top: 1.75rem;
         border-top: 1px solid var(--border);
+      }
+      .pager {
+        display: flex;
+        gap: 0.75rem;
       }
       .pager a {
         flex: 1;
@@ -146,6 +153,23 @@
       .pager .dir { display: block; font-size: 0.6875rem; color: var(--text-3); margin-bottom: 0.3rem; }
       .pager .t { display: block; font-size: 0.875rem; line-height: 1.45; font-weight: 600; }
       .pager .next { text-align: right; }
+
+      /* 다 읽은 뒤 돌아갈 곳. 이웃 글이 없는 노트(hidden)에서도 이것만은 나온다 —
+         끝까지 스크롤한 사람에게 출구가 없으면 안 된다. */
+      .to-list {
+        display: block;
+        margin-top: 0.75rem;
+        padding: 0.85rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 0.625rem;
+        background: transparent;
+        text-align: center;
+        text-decoration: none;
+        font-size: 0.8125rem;
+        color: var(--text-2);
+      }
+      .to-list:active { background: var(--surface-2); border-color: var(--border-strong); }
+      .end > .to-list:first-child { margin-top: 0; }   /* 이웃 글이 없을 때 */
 
       footer {
         margin-top: 4rem;
@@ -200,8 +224,11 @@
           {%- if n.url == page.url -%}{%- assign found = true -%}{%- endif -%}
           {%- unless found -%}{%- assign older = n -%}{%- endunless -%}
         {%- endfor -%}
+      {%- endunless -%}
+
+      <nav class="end">
         {%- if older or newer %}
-        <nav class="pager">
+        <div class="pager">
           {%- if older %}
           <a class="prev" href="{{ older.url | relative_url }}">
             <span class="dir">← 이전 글</span>
@@ -214,9 +241,10 @@
             <span class="t">{{ newer.title }}</span>
           </a>
           {%- endif %}
-        </nav>
-        {%- endif -%}
-      {%- endunless %}
+        </div>
+        {%- endif %}
+        <a class="to-list" href="{{ "/" | relative_url }}">목록으로</a>
+      </nav>
 
       <footer>— 끝 —</footer>
     </div>
