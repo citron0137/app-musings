@@ -4,10 +4,10 @@ title: 라도훈 - Musings | 사색 노트
 description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대한 짧은 생각들
 ---
 <!DOCTYPE html>
-<html lang="ko" class="scroll-smooth">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="robots" content="noindex, nofollow">
     <meta name="description" content="라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대한 짧은 생각들">
     <meta name="author" content="라도훈">
@@ -21,125 +21,784 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
     <meta property="og:description" content="라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대한 짧은 생각들">
     <meta property="og:image" content="https://rahoon.site/profile/public/thumbnail-en.webp">
 
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://musings.rahoon.site/">
-    <meta name="twitter:title" content="라도훈 - Musings">
-    <meta name="twitter:description" content="라도훈의 사색 노트">
-    <meta name="twitter:image" content="https://rahoon.site/profile/public/thumbnail-en.webp">
-
     <title>라도훈 - Musings | 사색 노트</title>
+
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#0f1115">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Musings">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230f1115'/><text x='50' y='72' font-size='58' text-anchor='middle'>📝</text></svg>">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
 
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-3PCKW1WMCV"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-3PCKW1WMCV');
-    </script>
+    <!--
+      외부 스크립트를 하나도 쓰지 않는다.
+      이 페이지는 마스터 비밀번호를 입력받는 곳이라, 서드파티 스크립트가 하나라도 끼면
+      그 스크립트가 비밀번호를 가져갈 수 있다. 스타일은 전부 인라인,
+      스크립트는 같은 오리진의 /js/musings-crypto.js 하나뿐.
+      덤으로 오프라인에서도 화면이 깨지지 않는다.
+    -->
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        :root { color-scheme: dark; --kb: 0px; }
+        body {
+            margin: 0;
+            background: #0f1115;
+            color: #e6e8eb;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo",
+                         "Noto Sans KR", sans-serif;
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+            /* 하단 고정 바에 본문이 가리지 않도록 */
+            padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+        }
+        a { color: inherit; }
+        main { max-width: 42rem; margin: 0 auto; padding: 0 1rem; }
 
-    <script>
-        (function() {
-            const savedTheme = localStorage.getItem('theme');
-            const systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            if (savedTheme === 'dark' || (!savedTheme && systemPreference)) {
-                document.documentElement.classList.add('dark');
-            }
-        })();
-    </script>
+        header.top {
+            max-width: 42rem;
+            margin: 0 auto;
+            padding: max(1.5rem, env(safe-area-inset-top)) 1rem 0;
+        }
+        header.top .back { font-size: 0.875rem; color: #8b929e; text-decoration: none; }
+        header.top h1 { margin: 1.25rem 0 0.25rem; font-size: 1.5rem; letter-spacing: -0.01em; }
+        header.top p { margin: 0; font-size: 0.875rem; color: #8b929e; }
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="{{ "/css/style.css" | relative_url }}">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: { 50: '#eff6ff', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' }
-                    }
-                }
-            }
-        };
-    </script>
+        section { margin-top: 2.25rem; }
+        .section-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        .section-head h2 {
+            margin: 0; font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.04em;
+            text-transform: uppercase; color: #6b7280;
+        }
+        .section-head .meta { font-size: 0.8125rem; color: #6b7280; }
+
+        .memo-locked {
+            border: 1px dashed #2a2f3a;
+            border-radius: 0.75rem;
+            padding: 1.25rem 1rem;
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+        .memo-locked[hidden] { display: none; }
+        .memo-card {
+            border: 1px solid #2a2f3a;
+            border-radius: 0.75rem;
+            background: #14171d;
+            padding: 0.85rem;
+            margin-bottom: 0.6rem;
+        }
+        .memo-card time { display: block; margin-bottom: 0.3rem; font-size: 0.75rem; color: #6b7280; }
+        .memo-card p { margin: 0; font-size: 0.9375rem; line-height: 1.65; white-space: pre-wrap; color: #d5d9df; }
+
+        .note {
+            display: block;
+            border: 1px solid #2a2f3a;
+            border-radius: 0.75rem;
+            background: #14171d;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            text-decoration: none;
+        }
+        .note:active { border-color: #3a4150; }
+        .note-top { display: flex; justify-content: space-between; gap: 0.75rem; align-items: baseline; }
+        .note h3 { margin: 0; font-size: 1.0625rem; line-height: 1.4; color: #e6e8eb; }
+        .note .date { flex: none; font-size: 0.75rem; color: #6b7280; }
+        .note .summary { margin: 0.5rem 0 0; font-size: 0.875rem; line-height: 1.6; color: #8b929e; }
+        .tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.75rem; }
+        .tag { font-size: 0.6875rem; color: #8b929e; background: #1c2027; border-radius: 999px; padding: 0.15rem 0.5rem; }
+
+        footer {
+            max-width: 42rem; margin: 3rem auto 0; padding: 1.5rem 1rem;
+            text-align: center; border-top: 1px solid #1c2027; color: #6b7280; font-size: 0.8125rem;
+        }
+        footer a { color: #8b929e; text-decoration: none; }
+
+        /* 배너 — 내 기기에서만 보인다 (미전송 큐 / 토큰 만료) */
+        #banners { max-width: 42rem; margin: 1rem auto 0; padding: 0 1rem; }
+        .banner { border-radius: 0.5rem; padding: 0.6rem 0.75rem; font-size: 0.8125rem; line-height: 1.45; margin-bottom: 0.5rem; }
+        .banner--pending { background: #3a2d0b; border: 1px solid #6b5410; color: #f0d78c; }
+        .banner--expiry  { background: #3a1414; border: 1px solid #7a2323; color: #f3a9a9; }
+
+        /* 하단 고정 바 — 모든 조작은 엄지 범위 안에서 */
+        .dock {
+            position: fixed;
+            left: 0; right: 0; bottom: 0;
+            z-index: 40;
+            display: flex;
+            gap: 0.75rem;
+            max-width: 42rem;
+            margin: 0 auto;
+            padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+            background: linear-gradient(to top, #0f1115 70%, rgba(15, 17, 21, 0));
+        }
+        button {
+            font: inherit;
+            border-radius: 0.75rem;
+            border: 1px solid transparent;
+            padding: 0.85rem 1rem;
+            cursor: pointer;
+        }
+        .btn-primary { flex: 1; background: #2563eb; color: #fff; font-weight: 600; }
+        .btn-primary:active { background: #1d4ed8; }
+        .btn-primary:disabled { opacity: 0.45; }
+        .btn-ghost { background: #171a21; border-color: #2a2f3a; color: #aeb4bf; font-size: 0.875rem; }
+        .btn-ghost:active { background: #1c2027; }
+
+        /* 바텀시트 */
+        .sheet {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.65);
+        }
+        .sheet[data-open="1"] { display: flex; }
+        .sheet > form {
+            width: 100%;
+            max-width: 42rem;
+            max-height: 85dvh;
+            overflow-y: auto;
+            background: #171a21;
+            border-radius: 1rem 1rem 0 0;
+            padding: 1.25rem;
+            padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+            /* 키보드가 올라오면 그 위에 붙는다 (visualViewport 로 --kb 갱신) */
+            margin-bottom: var(--kb, 0px);
+        }
+        .sheet label { display: block; font-size: 0.875rem; color: #aeb4bf; }
+        .sheet-title { margin: 0 0 0.5rem; font-size: 1rem; font-weight: 600; color: #e6e8eb; }
+        .sheet-note { margin: 0 0 1rem; font-size: 0.8125rem; line-height: 1.5; color: #8b929e; }
+        .sheet-note b { color: #aeb4bf; }
+        .sheet-note a { color: #60a5fa; text-decoration: none; font-weight: 600; }
+        .row { display: flex; gap: 0.75rem; margin-top: 0.75rem; }
+
+        #memo {
+            width: 100%;
+            min-height: 38dvh;
+            resize: none;
+            padding: 1rem;
+            border: 1px solid #2a2f3a;
+            border-radius: 0.75rem;
+            background: #0f1115;
+            color: #e6e8eb;
+            font: inherit;
+            line-height: 1.7;
+            outline: none;
+        }
+        #memo:focus { border-color: #4b5563; }
+        #memo::placeholder { color: #5a6070; }
+
+        input[type="password"], input[type="date"] {
+            width: 100%;
+            margin-top: 0.5rem;
+            padding: 0.75rem;
+            border: 1px solid #3a4150;
+            border-radius: 0.5rem;
+            background: #0f1115;
+            color: #e6e8eb;
+            font: inherit;
+            outline: none;
+        }
+        input:focus { border-color: #2563eb; }
+        .error { margin: 0.5rem 0 0; font-size: 0.875rem; color: #f3a9a9; }
+        .error[hidden] { display: none; }
+
+        #toast {
+            position: fixed;
+            left: 50%;
+            bottom: calc(5.5rem + env(safe-area-inset-bottom));
+            transform: translateX(-50%);
+            z-index: 60;
+            background: #1c2027;
+            border: 1px solid #2a2f3a;
+            color: #d5d9df;
+            font-size: 0.875rem;
+            padding: 0.6rem 1rem;
+            border-radius: 999px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            max-width: 90vw;
+            text-align: center;
+        }
+        #toast[data-show="1"] { opacity: 1; }
+    </style>
+
+    <script src="/js/musings-crypto.js"></script>
 </head>
-<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300" style="visibility: hidden;">
-    <script>document.body.style.visibility = 'visible';</script>
+<body>
 
-    <div class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 items-end">
-        <button id="darkModeToggle" class="h-10 px-3 rounded-full bg-primary-500 text-white shadow-lg hover:bg-primary-600 transition-all duration-300 hover:scale-110 flex items-center justify-center flex-shrink-0" title="다크모드 전환">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-        </button>
-    </div>
+<header class="top">
+    <a class="back" href="https://rahoon.site/profile/">← 뒤로</a>
+    <h1>Musings</h1>
+    <p>개발과 일, 그리고 일상에 대한 짧은 사색</p>
+</header>
 
-    <!-- 뒤로가기 (상단) -->
-    <header class="fixed top-0 left-0 right-0 h-14 flex items-center px-4 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md z-40">
-        <a href="https://rahoon.site/profile/" class="inline-flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-primary-500 transition-colors font-medium">← 뒤로</a>
-    </header>
+<div id="banners"></div>
 
-    <main class="pt-24 pb-20 px-4 min-h-screen">
-        <div class="max-w-3xl mx-auto">
-            <div class="text-center mb-16">
-                <h1 class="text-3xl md:text-4xl font-bold mb-4">Musings</h1>
-                <div class="w-20 h-1 bg-primary-500 mx-auto rounded-full"></div>
-                <p class="text-gray-600 dark:text-gray-300 mt-4">개발과 일, 그리고 일상에 대한 짧은 사색</p>
+<main>
+    <!--
+      최근 메모 — 개수와 마지막 시각만 보이고 내용은 잠겨 있다.
+      화면에 들어올 때만 GitHub API 를 부른다 (메모만 쓰고 나가면 안 부른다).
+    -->
+    <section id="recent-section">
+        <div class="section-head">
+            <h2>최근 메모</h2>
+            <span class="meta" id="recent-meta"></span>
+        </div>
+        <div class="memo-locked" id="recent-locked">잠겨 있습니다 — 아래 <b>최근 메모</b> 버튼</div>
+        <div id="recent-list"></div>
+    </section>
+
+    <!--
+      사색노트 목록. hidden: true 초안은 넣지 않는다 —
+      정적 사이트라 소스에 넣는 순간 제목이 공개된다.
+    -->
+    <section>
+        <div class="section-head">
+            <h2>사색 노트</h2>
+        </div>
+        {% assign notes = site.pages
+            | where_exp: "p", "p.date"
+            | where_exp: "p", "p.hidden != true"
+            | sort: "date"
+            | reverse %}
+        {% for note in notes %}
+        <a class="note" href="{{ note.url | relative_url }}">
+            <div class="note-top">
+                <h3>{{ note.title }}</h3>
+                <span class="date">{{ note.date | date: "%Y.%m.%d" }}</span>
             </div>
-
-            {%- comment -%}
-              노트는 저장소 루트의 <yyyy-mm-dd>-<제목>.md 파일들.
-              date 가 있는 페이지만 노트로 취급한다 (index.html 은 date 없음).
-              00-템플릿.md 는 hidden: true 로 걸러진다.
-            {%- endcomment -%}
-            {% assign notes = site.pages
-                | where_exp: "p", "p.date"
-                | where_exp: "p", "p.hidden != true"
-                | sort: "date"
-                | reverse %}
-
-            {% if notes == empty or notes.size == 0 %}
-            <div class="text-center py-20">
-                <p class="text-gray-500 dark:text-gray-400 text-lg mb-2">아직 작성된 노트가 없습니다.</p>
-                <p class="text-gray-400 dark:text-gray-500 text-sm">첫 번째 사색이 이곳에 쌓일 예정입니다.</p>
-            </div>
-            {% else %}
-            <div class="space-y-5">
-                {% for note in notes %}
-                <a href="{{ note.url | relative_url }}" class="block p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 hover:border-primary-500 dark:hover:border-primary-500 hover:shadow-lg transition-all duration-300 group">
-                    <div class="flex items-start justify-between mb-2 gap-4">
-                        <h2 class="text-xl font-bold group-hover:text-primary-500 dark:group-hover:text-primary-400 transition-colors">{{ note.title }}</h2>
-                        {% if note.date %}
-                        <span class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap mt-1">{{ note.date | date: "%Y.%m.%d" }}</span>
-                        {% endif %}
-                    </div>
-                    {% if note.summary %}
-                    <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">{{ note.summary }}</p>
-                    {% endif %}
-                    {% if note.tags and note.tags.size > 0 %}
-                    <div class="flex flex-wrap gap-2">
-                        {% for tag in note.tags %}
-                        <span class="px-2.5 py-0.5 text-xs rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">{{ tag }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </a>
-                {% endfor %}
+            {% if note.summary %}<p class="summary">{{ note.summary }}</p>{% endif %}
+            {% if note.tags and note.tags.size > 0 %}
+            <div class="tags">
+                {% for tag in note.tags %}<span class="tag">{{ tag }}</span>{% endfor %}
             </div>
             {% endif %}
-        </div>
-    </main>
+        </a>
+        {% endfor %}
+    </section>
+</main>
 
-    <footer class="py-8 px-4 border-t border-gray-200 dark:border-gray-700">
-        <div class="max-w-4xl mx-auto text-center">
-            <div class="flex justify-center gap-6 mb-4">
-                <a href="https://www.instagram.com/rahoon1021/" target="_blank" rel="noopener noreferrer" class="text-gray-600 dark:text-gray-300 hover:text-primary-500 dark:hover:text-primary-400 transition-colors text-sm">
-                    Instagram
-                </a>
-            </div>
-            <p class="text-gray-600 dark:text-gray-300">© 라도훈</p>
-        </div>
-    </footer>
+<footer>
+    <a href="https://www.instagram.com/rahoon1021/" target="_blank" rel="noopener noreferrer">Instagram</a>
+    <div style="margin-top:0.5rem">© 라도훈</div>
+</footer>
 
-    <script src="{{ "/js/script.js" | relative_url }}"></script>
+<nav class="dock">
+    <button id="open-compose" class="btn-primary">메모 쓰기</button>
+    <button id="open-recent" class="btn-ghost">최근 메모</button>
+</nav>
+
+<div id="toast"></div>
+
+<div class="sheet" id="compose-sheet">
+    <form id="compose-form">
+        <textarea id="memo" placeholder="떠오른 것을 그냥 적으세요."
+                  autocapitalize="sentences" spellcheck="false"></textarea>
+        <div class="row">
+            <button type="button" id="compose-cancel" class="btn-ghost" style="flex:1">닫기</button>
+            <button type="submit" id="compose-save" class="btn-primary">저장</button>
+        </div>
+    </form>
+</div>
+
+<!-- 비밀번호는 저장을 누른 뒤에 묻는다. 인증이 생각을 가로막으면 안 된다. -->
+<div class="sheet" id="pw-sheet">
+    <form id="pw-form">
+        <label for="pw">비밀번호</label>
+        <input id="pw" type="password" autocomplete="current-password" autocapitalize="off" spellcheck="false">
+        <p id="pw-error" class="error" hidden></p>
+        <div class="row">
+            <button type="button" id="pw-cancel" class="btn-ghost" style="flex:1">취소</button>
+            <button type="submit" id="pw-ok" class="btn-primary">확인</button>
+        </div>
+    </form>
+</div>
+
+<!--
+  토큰 등록 — token.enc 가 없거나 만료됐을 때만 뜬다.
+  받은 토큰으로 페이지가 스스로 token.enc 를 커밋한다 (노트북 없이 90일 갱신).
+-->
+<div class="sheet" id="tk-sheet">
+    <form id="tk-form">
+        <p class="sheet-title">토큰 등록</p>
+        <p class="sheet-note">
+            <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub 에서 발급 ↗</a><br>
+            · Repository access → <b>Only select repositories</b> → <b>app-musings</b><br>
+            · Permissions → <b>Contents: Read and write</b> (나머지 없음)<br>
+            · Expiration → <b>90 days</b>
+        </p>
+        <label for="tk">토큰</label>
+        <input id="tk" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…">
+        <label for="tk-exp" style="margin-top:0.75rem">만료일 <span style="color:#6b7280">— 90일로 발급했다면 그대로</span></label>
+        <input id="tk-exp" type="date">
+        <p id="tk-error" class="error" hidden></p>
+        <div class="row">
+            <button type="button" id="tk-cancel" class="btn-ghost" style="flex:1">취소</button>
+            <button type="submit" id="tk-ok" class="btn-primary">등록</button>
+        </div>
+    </form>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    const OWNER = 'citron0137';
+    const REPO = 'app-musings';
+    const BRANCH = 'inbox';            // main 과 공통 조상이 없는 고아 브랜치
+    const DIR = 'inbox';
+    const TOKEN_URL = '/token.enc';
+
+    const DRAFT_KEY = 'musings.draft';  // 평문 — 작성 중에만 존재
+    const QUEUE_KEY = 'musings.queue';  // 암호문 — 전송 실패분
+    const EXPIRY_WARN_DAYS = 14;
+    const MAX_TOKEN_DAYS = 90;          // 암호문이 공개되므로 유효 기간이 곧 위험 노출 창이다
+    const RECENT_LIMIT = 10;
+
+    const $ = (id) => document.getElementById(id);
+    const memo = $('memo');
+
+    // 비번/토큰/키는 인메모리만. 새로고침하면 휘발된다.
+    let session = null;      // { password, token, expires }
+    let pendingAction = null;
+    let tokenCtx = null;
+    let memoIndex = null;    // GitHub 에서 받은 메모 파일 목록 (lazy)
+
+    const readQueue = () => JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
+    const writeQueue = (q) => localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
+
+    function kstStamp() {
+        const kst = new Date(Date.now() + 9 * 3600 * 1000);
+        const p = (n) => String(n).padStart(2, '0');
+        return kst.getUTCFullYear() + '-' + p(kst.getUTCMonth() + 1) + '-' + p(kst.getUTCDate()) +
+               '-' + p(kst.getUTCHours()) + p(kst.getUTCMinutes()) + p(kst.getUTCSeconds());
+    }
+
+    /** KST 달력일 기준. 0 = 오늘이 만료일(아직 유효), 음수 = 지남. */
+    function daysUntil(dateStr) {
+        const kstNow = new Date(Date.now() + 9 * 3600 * 1000);
+        const today = Date.UTC(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate());
+        const p = dateStr.split('-').map(Number);
+        return Math.round((Date.UTC(p[0], p[1] - 1, p[2]) - today) / 86400000);
+    }
+
+    function stampToDate(name) {
+        const m = name.match(/^(\d{4})-(\d{2})-(\d{2})-(\d{2})(\d{2})(\d{2})$/);
+        if (!m) return null;
+        return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4] - 9, +m[5], +m[6]));
+    }
+
+    function formatStamp(name) {
+        const m = name.match(/^(\d{4})-(\d{2})-(\d{2})-(\d{2})(\d{2})\d{2}$/);
+        return m ? `${m[1]}.${m[2]}.${m[3]} ${m[4]}:${m[5]}` : name;
+    }
+
+    function ago(date) {
+        const mins = Math.round((Date.now() - date.getTime()) / 60000);
+        if (mins < 1) return '방금';
+        if (mins < 60) return mins + '분 전';
+        const hours = Math.round(mins / 60);
+        if (hours < 24) return hours + '시간 전';
+        return Math.round(hours / 24) + '일 전';
+    }
+
+    let toastTimer = null;
+    function toast(message) {
+        const el = $('toast');
+        el.textContent = message;
+        el.dataset.show = '1';
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => { el.dataset.show = ''; }, 2600);
+    }
+
+    function renderBanners() {
+        const banners = $('banners');
+        banners.textContent = '';
+
+        const pending = readQueue().length;
+        if (pending > 0) {
+            const el = document.createElement('div');
+            el.className = 'banner banner--pending';
+            el.textContent = `아직 올라가지 않은 메모 ${pending}개 — 다음 저장 때 함께 전송됩니다.`;
+            banners.append(el);
+        }
+
+        if (session && session.expires) {
+            const left = daysUntil(session.expires);
+            if (left <= EXPIRY_WARN_DAYS) {
+                const el = document.createElement('div');
+                el.className = 'banner banner--expiry';
+                el.textContent = left < 0
+                    ? `토큰이 만료됐습니다 (${session.expires}). 재등록이 필요합니다.`
+                    : `토큰 만료까지 ${left}일 (${session.expires}). 미리 재발급하세요.`;
+                banners.append(el);
+            }
+        }
+    }
+
+    const openSheet = (id) => { $(id).dataset.open = '1'; };
+    const closeSheet = (id) => { $(id).dataset.open = ''; };
+
+    function askPassword(action) {
+        pendingAction = action;
+        $('pw-error').hidden = true;
+        $('pw').value = '';
+        openSheet('pw-sheet');
+        setTimeout(() => $('pw').focus(), 60);
+    }
+
+    function needsToken(message) {
+        const err = new Error(message);
+        err.needsToken = true;
+        return err;
+    }
+
+    /**
+     * 비번으로 token.enc 를 풀어 세션을 연다.
+     * 서비스워커가 token.enc 를 캐시하므로 오프라인에서도 열린다 —
+     * 그래야 신호가 없어도 비밀번호를 검증하고 메모를 암호화할 수 있다.
+     */
+    async function openSession(password) {
+        const res = await fetch(TOKEN_URL);
+        if (res.status === 404) throw needsToken('토큰이 아직 등록되지 않았습니다.');
+        if (!res.ok) throw new Error('token.enc 를 불러올 수 없습니다.');
+
+        // 복호화 실패 = 비밀번호가 틀린 것. 토큰 등록 화면으로 보내면 안 된다.
+        const payload = JSON.parse(await MusingsCrypto.decrypt(await res.text(), password));
+        session = { password: password, token: payload.token, expires: payload.expires };
+        renderBanners();
+
+        if (daysUntil(payload.expires) < 0) throw needsToken('토큰이 만료됐습니다.');
+    }
+
+    async function registerToken(password, token, expires) {
+        const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/token.enc`;
+        const headers = {
+            Authorization: 'Bearer ' + token,
+            Accept: 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+        };
+
+        let sha;
+        const head = await fetch(url + '?ref=main', { headers: headers });
+        if (head.ok) sha = (await head.json()).sha;
+        else if (head.status !== 404) throw new Error('토큰이 저장소에 접근하지 못합니다 (' + head.status + ').');
+
+        const enc = JSON.stringify(await MusingsCrypto.encrypt(
+            JSON.stringify({ token: token, expires: expires }), password));
+        const body = { message: 'token.enc 갱신 (만료 ' + expires + ')', content: btoa(enc), branch: 'main' };
+        if (sha) body.sha = sha;
+
+        const res = await fetch(url, { method: 'PUT', headers: headers, body: JSON.stringify(body) });
+        if (!res.ok) throw new Error('token.enc 커밋 실패 — ' + res.status);
+
+        session = { password: password, token: token, expires: expires };
+        renderBanners();
+    }
+
+    function askToken(password, retry, reason) {
+        tokenCtx = { password: password, retry: retry };
+        const error = $('tk-error');
+        error.textContent = reason || '';
+        error.hidden = !reason;
+        $('tk').value = '';
+
+        // 브라우저는 GitHub 에서 만료일을 읽어올 수 없다 (CORS 로 헤더가 노출되지 않음).
+        // 정상 흐름은 "90일로 발급하고 곧바로 등록"이므로 오늘+90일을 미리 채운다.
+        const iso = (ms) => new Date(ms + 9 * 3600 * 1000).toISOString().slice(0, 10);
+        $('tk-exp').min = iso(Date.now());
+        $('tk-exp').max = iso(Date.now() + MAX_TOKEN_DAYS * 86400000);
+        $('tk-exp').value = iso(Date.now() + MAX_TOKEN_DAYS * 86400000);
+
+        openSheet('tk-sheet');
+        setTimeout(() => $('tk').focus(), 60);
+    }
+
+    async function putMemo(entry) {
+        const res = await fetch(
+            `https://api.github.com/repos/${OWNER}/${REPO}/contents/${DIR}/${entry.name}`,
+            {
+                method: 'PUT',
+                headers: {
+                    Authorization: 'Bearer ' + session.token,
+                    Accept: 'application/vnd.github+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: 'memo: ' + entry.name.replace('.enc', ''),
+                    content: btoa(entry.enc),
+                    branch: BRANCH
+                })
+            }
+        );
+        if (!res.ok) throw new Error('GitHub ' + res.status);
+    }
+
+    /** 큐를 비운다. 실패한 것은 큐에 남긴다. 전송 성공 개수를 돌려준다. */
+    async function flushQueue() {
+        const queue = readQueue();
+        const remaining = [];
+        for (const entry of queue) {
+            try {
+                await putMemo(entry);
+            } catch (err) {
+                remaining.push(entry);
+            }
+        }
+        writeQueue(remaining);
+        renderBanners();
+        return queue.length - remaining.length;
+    }
+
+    /** 메모 파일 목록 (비인증). 레이트리밋에 걸려도 페이지가 깨지지 않게 조용히 실패한다. */
+    async function loadMemoIndex() {
+        if (memoIndex) return memoIndex;
+        const res = await fetch(
+            `https://api.github.com/repos/${OWNER}/${REPO}/contents/${DIR}?ref=${BRANCH}`,
+            { headers: { Accept: 'application/vnd.github+json' } }
+        );
+        if (!res.ok) throw new Error('메모 목록을 불러올 수 없습니다 (' + res.status + ')');
+        memoIndex = (await res.json())
+            .filter((f) => f.name.endsWith('.enc'))
+            .sort((a, b) => b.name.localeCompare(a.name));
+        return memoIndex;
+    }
+
+    async function showRecentMeta() {
+        try {
+            const files = await loadMemoIndex();
+            if (files.length === 0) {
+                $('recent-locked').textContent = '아직 메모가 없습니다.';
+                return;
+            }
+            const last = stampToDate(files[0].name.replace('.enc', ''));
+            $('recent-meta').textContent = files.length + '개' + (last ? ' · 마지막 ' + ago(last) : '');
+        } catch (err) {
+            $('recent-meta').textContent = '';
+        }
+    }
+
+    async function showRecent(password) {
+        if (!session || session.password !== password) await openSession(password);
+
+        const files = (await loadMemoIndex()).slice(0, RECENT_LIMIT);
+        const list = $('recent-list');
+        list.textContent = '';
+
+        for (const file of files) {
+            let text;
+            try {
+                const raw = await fetch(file.download_url);
+                text = await MusingsCrypto.decrypt(await raw.text(), password);
+            } catch (err) {
+                text = '(복호화 실패)';
+            }
+            const card = document.createElement('div');
+            card.className = 'memo-card';
+            const when = document.createElement('time');
+            when.textContent = formatStamp(file.name.replace('.enc', ''));
+            const body = document.createElement('p');
+            body.textContent = text;
+            card.append(when, body);
+            list.append(card);
+        }
+
+        $('recent-locked').hidden = files.length > 0;
+        $('recent-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    async function save(password) {
+        const text = memo.value.trim();
+        if (!text) return;
+
+        // 비번 검증 + 토큰 확보. 오프라인이면 서비스워커 캐시에서 token.enc 가 온다.
+        if (!session || session.password !== password) await openSession(password);
+
+        const entry = {
+            name: kstStamp() + '.enc',
+            enc: JSON.stringify(await MusingsCrypto.encrypt(text, password))
+        };
+
+        // 암호화가 끝나는 즉시 평문 초안을 지운다 — 전송이 실패해도 폰에는 암호문만 남는다.
+        memo.value = '';
+        localStorage.removeItem(DRAFT_KEY);
+        memoIndex = null;   // 목록 캐시 무효화
+
+        writeQueue(readQueue().concat([entry]));
+        renderBanners();
+        closeSheet('compose-sheet');   // 시트가 내려가는 것이 "보냈다"는 확인이다
+
+        const sent = await flushQueue();
+        const left = readQueue().length;
+        toast(left === 0
+            ? (sent > 1 ? `저장됨 (밀린 것 포함 ${sent}개)` : '저장됨')
+            : `전송 실패 — 폰에 보관 중 (${left}개)`);
+    }
+
+    async function run(password, fn) {
+        try {
+            await fn(password);
+        } catch (err) {
+            if (err.needsToken) {
+                askToken(password, fn, err.message);
+                return;
+            }
+            session = null;
+            MusingsCrypto.clearKeyCache();
+            toast(err.message);
+        }
+    }
+
+    /** 세션이 있으면 바로, 없으면 비밀번호를 물은 뒤 실행. */
+    function withPassword(fn) {
+        if (session) run(session.password, fn);
+        else askPassword(fn);
+    }
+
+    memo.addEventListener('input', () => {
+        // 탭이 죽어도 글이 날아가지 않도록. 평문이지만 암호화되는 순간 지워진다.
+        localStorage.setItem(DRAFT_KEY, memo.value);
+    });
+
+    function openCompose() {
+        openSheet('compose-sheet');
+        setTimeout(() => memo.focus(), 60);
+    }
+
+    $('open-compose').addEventListener('click', openCompose);
+    $('compose-cancel').addEventListener('click', () => closeSheet('compose-sheet'));
+
+    $('compose-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!memo.value.trim()) return;
+        withPassword(save);
+    });
+
+    $('open-recent').addEventListener('click', () => withPassword(showRecent));
+
+    $('pw-cancel').addEventListener('click', () => closeSheet('pw-sheet'));
+
+    $('pw-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const pw = $('pw').value;
+        if (!pw) return;
+        const action = pendingAction;
+        $('pw-ok').disabled = true;
+        try {
+            await action(pw);
+            closeSheet('pw-sheet');
+        } catch (err) {
+            if (err.needsToken) {
+                closeSheet('pw-sheet');
+                askToken(pw, action, err.message);
+                return;
+            }
+            session = null;
+            MusingsCrypto.clearKeyCache();
+            const error = $('pw-error');
+            error.textContent = /decrypt|operation-specific/i.test(err.message)
+                ? '비밀번호가 맞지 않습니다.'
+                : err.message;
+            error.hidden = false;
+        } finally {
+            $('pw-ok').disabled = false;
+        }
+    });
+
+    $('tk-cancel').addEventListener('click', () => {
+        closeSheet('tk-sheet');
+        tokenCtx = null;
+        toast('토큰이 없어 전송하지 못했습니다.');
+    });
+
+    $('tk-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!tokenCtx) return;
+
+        const token = $('tk').value.trim();
+        const expires = $('tk-exp').value;
+        const error = $('tk-error');
+        const fail = (msg) => { error.textContent = msg; error.hidden = false; };
+
+        if (!token.startsWith('github_pat_')) {
+            return fail('fine-grained PAT 이 아닙니다 (github_pat_ 로 시작). classic 토큰은 모든 공개 저장소에 쓰기 권한이 열립니다.');
+        }
+        if (!expires) return fail('만료일을 입력하세요.');
+
+        const left = daysUntil(expires);
+        if (left <= 0) return fail('이미 지난 날짜입니다.');
+        if (left > MAX_TOKEN_DAYS) {
+            return fail(`만료가 ${left}일 뒤입니다 — ${MAX_TOKEN_DAYS}일을 넘을 수 없습니다. 암호문이 공개 저장소에 올라가므로 유효 기간이 곧 위험 노출 창입니다.`);
+        }
+
+        $('tk-ok').disabled = true;
+        try {
+            await registerToken(tokenCtx.password, token, expires);
+            const retry = tokenCtx.retry;
+            const password = tokenCtx.password;
+            tokenCtx = null;
+            closeSheet('tk-sheet');
+            toast('토큰 등록됨');
+            if (retry) await run(password, retry);
+        } catch (err) {
+            fail(err.message);
+        } finally {
+            $('tk-ok').disabled = false;
+        }
+    });
+
+    // 시트 바깥(어두운 영역)을 누르면 닫힌다
+    ['compose-sheet', 'pw-sheet', 'tk-sheet'].forEach((id) => {
+        $(id).addEventListener('click', (e) => { if (e.target === $(id)) closeSheet(id); });
+    });
+
+    // 키보드가 올라오면 시트를 그 위에 붙인다.
+    if (window.visualViewport) {
+        const vv = window.visualViewport;
+        const sync = () => {
+            const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+            document.documentElement.style.setProperty('--kb', kb + 'px');
+        };
+        vv.addEventListener('resize', sync);
+        vv.addEventListener('scroll', sync);
+    }
+
+    // 최근 메모 섹션이 화면에 들어올 때만 GitHub 을 부른다.
+    if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries) => {
+            if (entries.some((en) => en.isIntersecting)) {
+                io.disconnect();
+                showRecentMeta();
+            }
+        }, { rootMargin: '100px' });
+        io.observe($('recent-section'));
+    } else {
+        showRecentMeta();
+    }
+
+    const draft = localStorage.getItem(DRAFT_KEY);
+    if (draft) memo.value = draft;
+
+    renderBanners();
+
+    // 홈 화면 앱의 start_url 은 /?compose=1 — 아이콘을 누르면 곧바로 쓸 수 있어야 한다.
+    if (new URLSearchParams(location.search).has('compose')) openCompose();
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+})();
+</script>
 </body>
 </html>
