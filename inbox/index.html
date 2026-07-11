@@ -118,6 +118,7 @@ permalink: /inbox/
         .sheet-title { margin: 0 0 0.5rem; font-size: 1rem; font-weight: 600; color: #e6e8eb; }
         .sheet-note { margin: 0 0 1rem; font-size: 0.8125rem; line-height: 1.5; color: #8b929e; }
         .sheet-note b { color: #aeb4bf; }
+        .sheet-note a { color: #60a5fa; text-decoration: none; font-weight: 600; }
         #pw, #tk, #tk-exp {
             width: 100%;
             margin-top: 0.5rem;
@@ -185,8 +186,13 @@ permalink: /inbox/
     <form id="tk-form">
         <p class="sheet-title">토큰 등록</p>
         <p class="sheet-note">
-            GitHub fine-grained PAT — <b>app-musings</b> 저장소의 <b>Contents: Read and write</b> 만.
-            만료는 <b>90일 이내</b>여야 합니다.
+            <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">
+                GitHub 에서 발급 ↗
+            </a><br>
+            · Repository access → <b>Only select repositories</b> → <b>app-musings</b><br>
+            · Permissions → Repository → <b>Contents: Read and write</b> (나머지 없음)<br>
+            · Expiration → <b>90 days</b><br>
+            <span style="color:#6b7280">classic 토큰(ghp_)은 모든 공개 저장소에 쓰기 권한이 열려 쓸 수 없습니다.</span>
         </p>
         <label for="tk">토큰</label>
         <input id="tk" type="password" autocomplete="off" autocapitalize="off" spellcheck="false"
