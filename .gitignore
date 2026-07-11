@@ -1,3 +1,8 @@
+# 평문/비밀번호/토큰은 절대 커밋하지 않는다 — 암호문(.enc)만 커밋한다.
 _locked/
+
+# pull-inbox.js 가 복호화해 내려놓는 메모 평문
+_inbox/
+
 .jekyll-cache/
 _site/
