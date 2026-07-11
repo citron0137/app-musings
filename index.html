@@ -55,22 +55,32 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         a { color: inherit; }
         main { max-width: 42rem; margin: 0 auto; padding: 0 1rem; }
 
-        /* 화면 위 절반은 비워둔다 — 여백이 이 사이트의 첫인상이다. */
-        header.top {
+        /* 첫 화면 = 제목 + 최근 메모. 사색노트 목록은 스크롤해야 나온다.
+           하단 바(약 5rem)에 가리지 않도록 그만큼 뺀다. */
+        .first {
             display: flex;
             flex-direction: column;
-            justify-content: flex-end;
-            min-height: 50dvh;
-            max-width: 42rem;
-            margin: 0 auto;
-            padding: max(2rem, env(safe-area-inset-top)) 1rem 1.5rem;
+            min-height: calc(100dvh - 5.5rem);
         }
-        header.top h1 { margin: 0 0 0.4rem; font-size: 2rem; letter-spacing: -0.02em; font-weight: 600; }
-        header.top p { margin: 0 0 1.25rem; font-size: 0.9375rem; line-height: 1.6; color: #8b929e; }
+        /* 여백이 이 사이트의 첫인상이다 — 제목 위아래 모두 넉넉하게. */
+        header.top {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-width: 42rem;
+            width: 100%;
+            margin: 0 auto;
+            padding: max(2rem, env(safe-area-inset-top)) 1rem 2rem;
+        }
+        header.top h1 { margin: 0 0 0.5rem; font-size: 2rem; letter-spacing: -0.02em; font-weight: 600; }
+        header.top p { margin: 0 0 1.5rem; font-size: 0.9375rem; line-height: 1.6; color: #8b929e; }
         header.top .links a { font-size: 0.875rem; color: #8b929e; text-decoration: none; }
         header.top .links a:active { color: #d5d9df; }
 
         section { margin-top: 2.25rem; }
+        /* 첫 화면 안의 최근 메모 — main 밖이라 자기 폭·여백을 직접 잡는다 */
+        .edge { max-width: 42rem; width: 100%; margin: 0 auto; padding: 0 1rem 1.5rem; }
         .section-head {
             display: flex;
             align-items: baseline;
@@ -89,12 +99,12 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
             display: block;
             width: 100%;
             border: 1px dashed #2a2f3a;
-            border-radius: 0.75rem;
-            padding: 1.5rem 1rem;
+            border-radius: 0.625rem;
+            padding: 0.7rem 1rem;
             background: transparent;
             text-align: center;
             color: #6b7280;
-            font-size: 0.875rem;
+            font-size: 0.8125rem;
         }
         .memo-locked:active { border-color: #3a4150; background: #14171d; }
         .memo-locked:disabled { opacity: 0.6; }
@@ -256,22 +266,23 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
 </head>
 <body>
 
-<header class="top">
-    <h1>Musings</h1>
-    <p>개발과 일, 그리고 일상에 대한 짧은 사색</p>
-    <div class="links">
-        <a href="https://www.instagram.com/rahoon1021/" target="_blank" rel="noopener noreferrer">Instagram ↗</a>
-    </div>
-</header>
+<!-- 첫 화면: 제목 + 최근 메모. 사색노트 목록은 스크롤해야 나온다. -->
+<div class="first">
+    <header class="top">
+        <h1>Musings</h1>
+        <p>개발과 일, 그리고 일상에 대한 짧은 사색</p>
+        <div class="links">
+            <a href="https://www.instagram.com/rahoon1021/" target="_blank" rel="noopener noreferrer">Instagram ↗</a>
+        </div>
+    </header>
 
-<div id="banners"></div>
+    <div id="banners"></div>
 
-<main>
     <!--
       최근 메모 — 개수와 마지막 시각만 보이고 내용은 잠겨 있다.
       화면에 들어올 때만 GitHub API 를 부른다 (메모만 쓰고 나가면 안 부른다).
     -->
-    <section id="recent-section">
+    <section id="recent-section" class="edge">
         <div class="section-head">
             <h2>최근 메모</h2>
             <span class="meta" id="recent-meta"></span>
@@ -279,7 +290,9 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         <button type="button" class="memo-locked" id="recent-locked">눌러서 열기</button>
         <div id="recent-list"></div>
     </section>
+</div>
 
+<main>
     <!--
       사색노트 목록. hidden: true 초안은 넣지 않는다 —
       정적 사이트라 소스에 넣는 순간 제목이 공개된다.
