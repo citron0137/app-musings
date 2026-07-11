@@ -9,7 +9,7 @@
 {% seo %}
     <link rel="stylesheet" href="{{ "/assets/css/style.css?v=" | append: site.github.build_revision | relative_url }}">
     {% include head-custom.html %}
-    <!-- 잠긴 노트 복호화. 메모 앱(/inbox/)과 같은 모듈을 쓴다 — KDF 상수의 단일 출처. -->
+    <!-- 잠긴 노트 복호화. 루트 페이지의 메모 입력과 같은 모듈을 쓴다 — KDF 상수의 단일 출처. -->
     <script src="{{ "/js/musings-crypto.js" | relative_url }}"></script>
   </head>
   <body>
@@ -17,7 +17,5 @@
       <p style="margin-bottom:1.5rem;"><a href="{{ "/" | relative_url }}">← 뒤로</a></p>
       {{ content }}
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
-    <script>anchors.add();</script>
   </body>
 </html>
