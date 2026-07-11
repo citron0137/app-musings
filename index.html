@@ -109,6 +109,22 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         .memo-locked:active { border-color: #3a4150; background: #14171d; }
         .memo-locked:disabled { opacity: 0.6; }
         .memo-locked[hidden] { display: none; }
+
+        /* 더보기 — 기본값이 도구의 성격을 정한다.
+           열자마자 다 펼치면 '훑어보는 곳'이 되고, 눌러야 더 나오면 '확인하는 곳'으로 남는다. */
+        .memo-more {
+            display: block;
+            width: 100%;
+            margin-top: 0.25rem;
+            padding: 0.65rem 1rem;
+            border: 1px solid #2a2f3a;
+            border-radius: 0.625rem;
+            background: transparent;
+            color: #8b929e;
+            font-size: 0.8125rem;
+        }
+        .memo-more:active { background: #14171d; }
+        .memo-more[hidden] { display: none; }
         .memo-card {
             border: 1px solid #2a2f3a;
             border-radius: 0.75rem;
@@ -306,6 +322,7 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         </div>
         <button type="button" class="memo-locked" id="recent-locked">눌러서 열기</button>
         <div id="recent-list"></div>
+        <button type="button" class="memo-more" id="recent-more" hidden></button>
     </section>
 </div>
 
@@ -417,7 +434,10 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
     const QUEUE_KEY = 'musings.queue';  // 암호문 — 전송 실패분
     const EXPIRY_WARN_DAYS = 14;
     const MAX_TOKEN_DAYS = 90;          // 암호문이 공개되므로 유효 기간이 곧 위험 노출 창이다
-    const RECENT_LIMIT = 10;
+
+    // 처음엔 5개만. 더보기를 눌러야 5개씩 더 나온다 —
+    // 뷰어는 '확인하는 곳'이지 '훑어보는 곳'이 아니다. 쌓인 더미는 노트북에서 Claude 와 본다.
+    const PAGE_SIZE = 5;
 
     const $ = (id) => document.getElementById(id);
     const memo = $('memo');
@@ -427,6 +447,7 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
     let pendingAction = null;
     let tokenCtx = null;
     let memoIndex = null;    // GitHub 에서 받은 메모 파일 목록 (lazy)
+    let shownCount = 0;      // 지금까지 펼친 메모 개수
 
     const readQueue = () => JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
     const writeQueue = (q) => localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
@@ -651,32 +672,53 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         }
     }
 
+    async function renderMemoCard(file, password) {
+        let text;
+        try {
+            const raw = await fetch(file.download_url);
+            text = await MusingsCrypto.decrypt(await raw.text(), password);
+        } catch (err) {
+            text = '(복호화 실패)';
+        }
+        const card = document.createElement('div');
+        card.className = 'memo-card';
+        const when = document.createElement('time');
+        when.textContent = formatStamp(file.name.replace('.enc', ''));
+        const body = document.createElement('p');
+        body.textContent = text;
+        card.append(when, body);
+        $('recent-list').append(card);
+    }
+
+    /** 다음 한 뭉치를 붙인다. 끝에 닿으면 더보기 버튼이 사라진다. */
+    async function showMore(password) {
+        const files = await loadMemoIndex();
+        const next = files.slice(shownCount, shownCount + PAGE_SIZE);
+
+        const more = $('recent-more');
+        more.disabled = true;
+        try {
+            for (const file of next) {
+                await renderMemoCard(file, password);
+            }
+        } finally {
+            more.disabled = false;
+        }
+
+        shownCount += next.length;
+        const left = files.length - shownCount;
+        more.hidden = left <= 0;
+        more.textContent = `더보기 (${left}개 남음)`;
+    }
+
     async function showRecent(password) {
         if (!session || session.password !== password) await openSession(password);
 
-        const files = (await loadMemoIndex()).slice(0, RECENT_LIMIT);
-        const list = $('recent-list');
-        list.textContent = '';
+        $('recent-list').textContent = '';
+        shownCount = 0;
+        await showMore(password);
 
-        for (const file of files) {
-            let text;
-            try {
-                const raw = await fetch(file.download_url);
-                text = await MusingsCrypto.decrypt(await raw.text(), password);
-            } catch (err) {
-                text = '(복호화 실패)';
-            }
-            const card = document.createElement('div');
-            card.className = 'memo-card';
-            const when = document.createElement('time');
-            when.textContent = formatStamp(file.name.replace('.enc', ''));
-            const body = document.createElement('p');
-            body.textContent = text;
-            card.append(when, body);
-            list.append(card);
-        }
-
-        $('recent-locked').hidden = files.length > 0;
+        $('recent-locked').hidden = shownCount > 0;
         $('recent-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -749,6 +791,7 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
 
     // 최근 메모 섹션의 잠긴 상자 자체가 열기 버튼이다.
     $('recent-locked').addEventListener('click', () => withPassword(showRecent));
+    $('recent-more').addEventListener('click', () => withPassword(showMore));
 
     $('pw-cancel').addEventListener('click', () => closeSheet('pw-sheet'));
 
