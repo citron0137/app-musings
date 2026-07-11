@@ -49,18 +49,16 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
                          "Noto Sans KR", sans-serif;
             font-size: 16px;
             -webkit-font-smoothing: antialiased;
-            /* 하단 고정 바에 본문이 가리지 않도록 */
-            padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+            padding-bottom: calc(1rem + env(safe-area-inset-bottom));
         }
         a { color: inherit; }
         main { max-width: 42rem; margin: 0 auto; padding: 0 1rem; }
 
-        /* 첫 화면 = 제목 + 최근 메모. 사색노트 목록은 스크롤해야 나온다.
-           하단 바(약 5rem)에 가리지 않도록 그만큼 뺀다. */
+        /* 첫 화면 = 제목 + 최근 메모 + 메모 쓰기. 사색노트 목록은 스크롤해야 나온다. */
         .first {
             display: flex;
             flex-direction: column;
-            min-height: calc(100dvh - 5.5rem);
+            min-height: 100dvh;
         }
         /* 여백이 이 사이트의 첫인상이다 — 제목 위아래 모두 넉넉하게. */
         header.top {
@@ -180,26 +178,6 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         .banner--pending { background: #3a2d0b; border: 1px solid #6b5410; color: #f0d78c; }
         .banner--expiry  { background: #3a1414; border: 1px solid #7a2323; color: #f3a9a9; }
 
-        /* 하단 고정 바 — 모든 조작은 엄지 범위 안에서 */
-        .dock {
-            position: fixed;
-            left: 0; right: 0; bottom: 0;
-            z-index: 40;
-            display: flex;
-            gap: 0.75rem;
-            max-width: 42rem;
-            margin: 0 auto;
-            padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
-            background: linear-gradient(to top, #0f1115 70%, rgba(15, 17, 21, 0));
-            transition: transform 0.22s ease, opacity 0.22s ease;
-        }
-        /* 스크롤을 내린다 = 읽는 중 → 버튼이 화면 아래를 차지할 이유가 없다.
-           위로 올리면 = 쓰려는 동작 → 다시 나타난다. */
-        .dock[data-hidden="1"] {
-            transform: translateY(120%);
-            opacity: 0;
-            pointer-events: none;
-        }
         button {
             font: inherit;
             border-radius: 0.75rem;
@@ -210,6 +188,7 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         .btn-primary { flex: 1; background: #2563eb; color: #fff; font-weight: 600; }
         .btn-primary:active { background: #1d4ed8; }
         .btn-primary:disabled { opacity: 0.45; }
+        .compose-btn { display: block; width: 100%; margin-top: 1.25rem; }
         .btn-ghost { background: #171a21; border-color: #2a2f3a; color: #aeb4bf; font-size: 0.875rem; }
         .btn-ghost:active { background: #1c2027; }
 
@@ -277,7 +256,7 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         #toast {
             position: fixed;
             left: 50%;
-            bottom: calc(5.5rem + env(safe-area-inset-bottom));
+            bottom: calc(2rem + env(safe-area-inset-bottom));
             transform: translateX(-50%);
             z-index: 60;
             background: #1c2027;
@@ -323,6 +302,11 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         <button type="button" class="memo-locked" id="recent-locked">눌러서 열기</button>
         <div id="recent-list"></div>
         <button type="button" class="memo-more" id="recent-more" hidden></button>
+
+        <!-- 첫 화면의 맨 아래 = 엄지가 가장 편한 곳.
+             홈 화면 앱은 start_url=/?compose=1 이라 이 버튼을 거치지 않는다 —
+             브라우저로 열었을 때를 위한 것이다. -->
+        <button type="button" class="btn-primary compose-btn" id="open-compose">메모 쓰기</button>
     </section>
 </div>
 
@@ -364,10 +348,6 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
 </main>
 
 <footer>— 끝 —</footer>
-
-<nav class="dock">
-    <button id="open-compose" class="btn-primary">메모 쓰기</button>
-</nav>
 
 <div id="toast"></div>
 
@@ -521,16 +501,8 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         }
     }
 
-    const dock = document.querySelector('.dock');
-    const setDock = (visible) => { dock.dataset.hidden = visible ? '' : '1'; };
-
-    // 시트가 열려 있으면 하단 바를 숨긴다 (반투명 배경 뒤로 비치는 것을 막는다)
-    const openSheet = (id) => { $(id).dataset.open = '1'; setDock(false); };
-    const closeSheet = (id) => {
-        $(id).dataset.open = '';
-        const anyOpen = ['compose-sheet', 'pw-sheet', 'tk-sheet'].some((s) => $(s).dataset.open === '1');
-        if (!anyOpen) setDock(true);
-    };
+    const openSheet = (id) => { $(id).dataset.open = '1'; };
+    const closeSheet = (id) => { $(id).dataset.open = ''; };
 
     function askPassword(action) {
         pendingAction = action;
@@ -868,39 +840,6 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
     ['compose-sheet', 'pw-sheet', 'tk-sheet'].forEach((id) => {
         $(id).addEventListener('click', (e) => { if (e.target === $(id)) closeSheet(id); });
     });
-
-    // 스크롤 방향으로 읽기/쓰기 의도를 구분한다.
-    // 내린다 = 읽는 중 → 하단 바를 치운다. 올린다 = 쓰려는 동작 → 다시 꺼낸다.
-    (function watchScroll() {
-        const THRESHOLD = 8;      // 손떨림 무시
-        const TOP_ZONE = 120;     // 맨 위에서는 항상 보인다
-        let last = window.scrollY;
-        let ticking = false;
-
-        const update = () => {
-            ticking = false;
-            const y = window.scrollY;
-            const delta = y - last;
-
-            // 시트가 열려 있으면 스크롤이 하단 바를 되살리면 안 된다.
-            const sheetOpen = ['compose-sheet', 'pw-sheet', 'tk-sheet']
-                .some((s) => $(s).dataset.open === '1');
-            if (sheetOpen) { last = y; return; }
-
-            if (y < TOP_ZONE) setDock(true);
-            else if (delta > THRESHOLD) setDock(false);
-            else if (delta < -THRESHOLD) setDock(true);
-
-            if (Math.abs(delta) > THRESHOLD) last = y;
-        };
-
-        window.addEventListener('scroll', () => {
-            if (!ticking) {
-                ticking = true;
-                requestAnimationFrame(update);
-            }
-        }, { passive: true });
-    })();
 
     // 키보드가 올라오면 시트를 그 위에 붙인다.
     if (window.visualViewport) {
