@@ -15,7 +15,7 @@ permalink: /inbox/sw.js
  *
  * api.github.com 은 절대 캐시하지 않는다. 전송은 항상 실제 네트워크여야 한다.
  */
-const CACHE = 'musings-inbox-v1';
+const CACHE = 'musings-inbox-v2';
 const SHELL = [
   '/inbox/',
   '/js/musings-crypto.js',
@@ -23,10 +23,14 @@ const SHELL = [
 ];
 const TOKEN_PATH = '/token.enc';
 
+// token.enc 는 프리캐시에 넣지 않는다.
+// addAll 은 하나라도 실패하면 전체가 실패한다 — 토큰 등록 전(404)에는
+// 서비스워커 설치 자체가 실패해서 오프라인 기능이 통째로 죽는다.
+// 토큰은 첫 성공 응답 때 fetch 핸들러가 알아서 캐시한다.
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE)
-      .then((cache) => cache.addAll(SHELL.concat([TOKEN_PATH])))
+      .then((cache) => cache.addAll(SHELL))
       .then(() => self.skipWaiting())
   );
 });
@@ -49,12 +53,17 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
 
   // token.enc: 최신을 우선하되, 오프라인이면 캐시본으로라도 비밀번호 검증을 가능하게 한다.
+  //
+  // 성공한 응답만 캐시한다. 404(아직 등록 전)를 캐시하면, 나중에 토큰을 등록해도
+  // 캐시에 404 가 남아 오프라인에서 토큰을 못 찾는다.
   if (url.pathname === TOKEN_PATH) {
     event.respondWith(
       fetch(request)
         .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((cache) => cache.put(request, copy));
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((cache) => cache.put(request, copy));
+          }
           return res;
         })
         .catch(() => caches.match(request))
