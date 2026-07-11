@@ -132,60 +132,73 @@
 </script>
 
 <style>
+/* 잠겨 있다는 것이 방해가 아니라 글의 일부로 보이게 —
+   파선 테두리로 '여기 뭔가 막혀 있다'고 외치는 대신, 조용한 면으로 가라앉힌다. */
 .locked-musing {
-  margin: 1.5rem 0;
-  padding: 0.85rem 1rem;
-  border: 1px dashed #d1d5db;
-  border-radius: 6px;
-  background: #f9fafb;
+  margin: 2em 0;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--border);
+  border-radius: 0.625rem;
+  background: var(--surface-2);
 }
 .locked-musing__toggle {
-  font-size: 0.9rem;
-  background: #fff;
-  border: 1px solid #9ca3af;
-  border-radius: 4px;
-  padding: 0.4rem 0.8rem;
+  font-size: 0.875rem;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.9rem;
   cursor: pointer;
-  color: #374151;
+  color: var(--text-2);
   font-family: inherit;
 }
-.locked-musing__toggle:hover { background: #f3f4f6; }
+.locked-musing__toggle:hover { background: var(--surface-2); }
+.locked-musing__toggle:active { border-color: var(--text-3); }
 .locked-musing__form {
-  margin-top: 0.75rem;
+  margin-top: 0.85rem;
   display: flex;
   gap: 0.5rem;
   align-items: center;
   flex-wrap: wrap;
 }
 .locked-musing__pw {
-  padding: 0.4rem 0.6rem;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  min-width: 180px;
+  flex: 1;
+  min-width: 11rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.875rem;
   font-family: inherit;
+  outline: none;
 }
+.locked-musing__pw:focus { border-color: var(--accent); }
 .locked-musing__form button {
-  padding: 0.4rem 0.85rem;
-  border: 1px solid #9ca3af;
-  background: #fff;
-  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 0.5rem;
   cursor: pointer;
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 600;
 }
-.locked-musing__error { color: #b91c1c; font-size: 0.85rem; }
+.locked-musing__form button:active { background: var(--accent-strong); }
+.locked-musing__error { color: var(--err-text); font-size: 0.8125rem; flex-basis: 100%; }
+/* 열린 뒤에는 본문과 같은 결로 읽힌다 — 크기·행간을 .prose 에 맞춘다. */
 .locked-musing__content {
-  margin-top: 0.75rem;
-  padding: 0.85rem 1rem;
-  background: #fff;
-  border-radius: 4px;
-  border-left: 3px solid #6366f1;
+  margin: 0.85rem 0 0;
+  padding: 1rem 1.15rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
   white-space: pre-wrap;
   word-wrap: break-word;
+  word-break: keep-all;
   font-family: inherit;
-  font-size: 0.95rem;
-  line-height: 1.75;
-  color: #374151;
+  font-size: 1rem;
+  line-height: 1.9;
+  color: var(--text);
 }
 </style>

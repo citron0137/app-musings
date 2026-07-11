@@ -24,11 +24,11 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
     <title>라도훈 - Musings | 사색 노트</title>
 
     <link rel="manifest" href="/manifest.webmanifest">
-    <meta name="theme-color" content="#0f1115">
+    <meta name="theme-color" content="#fbfaf9">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Musings">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230f1115'/><text x='50' y='72' font-size='58' text-anchor='middle'>📝</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23fbfaf9'/><text x='50' y='72' font-size='58' text-anchor='middle'>📝</text></svg>">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
 
     <!--
@@ -38,21 +38,10 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
       스크립트는 같은 오리진의 /js/musings-crypto.js 하나뿐.
       덤으로 오프라인에서도 화면이 깨지지 않는다.
     -->
+    {% include style-base.html %}
     <style>
-        *, *::before, *::after { box-sizing: border-box; }
-        :root { color-scheme: dark; --kb: 0px; }
-        body {
-            margin: 0;
-            background: #0f1115;
-            color: #e6e8eb;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo",
-                         "Noto Sans KR", sans-serif;
-            font-size: 16px;
-            -webkit-font-smoothing: antialiased;
-            padding-bottom: calc(1rem + env(safe-area-inset-bottom));
-        }
-        a { color: inherit; }
-        main { max-width: 42rem; margin: 0 auto; padding: 0 1rem; }
+        body { padding-bottom: calc(1rem + env(safe-area-inset-bottom)); }
+        main { max-width: var(--shell); margin: 0 auto; padding: 0 1rem; }
 
         /* 첫 화면 = 제목 + 최근 메모 + 메모 쓰기. 사색노트 목록은 스크롤해야 나온다. */
         .first {
@@ -72,13 +61,13 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
             padding: max(2rem, env(safe-area-inset-top)) 1rem 2rem;
         }
         header.top h1 { margin: 0 0 0.5rem; font-size: 2rem; letter-spacing: -0.02em; font-weight: 600; }
-        header.top p { margin: 0 0 1.5rem; font-size: 0.9375rem; line-height: 1.6; color: #8b929e; }
-        header.top .links a { font-size: 0.875rem; color: #8b929e; text-decoration: none; }
-        header.top .links a:active { color: #d5d9df; }
+        header.top p { margin: 0 0 1.5rem; font-size: 0.9375rem; line-height: 1.6; color: var(--text-2); }
+        header.top .links a { font-size: 0.875rem; color: var(--text-3); text-decoration: none; }
+        header.top .links a:active { color: var(--text); }
 
         section { margin-top: 2.25rem; }
         /* 첫 화면 안의 최근 메모 — main 밖이라 자기 폭·여백을 직접 잡는다 */
-        .edge { max-width: 42rem; width: 100%; margin: 0 auto; padding: 0 1rem 1.5rem; }
+        .edge { max-width: var(--shell); width: 100%; margin: 0 auto; padding: 0 1rem 1.5rem; }
         .section-head {
             display: flex;
             align-items: baseline;
@@ -88,23 +77,23 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         }
         .section-head h2 {
             margin: 0; font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.04em;
-            text-transform: uppercase; color: #6b7280;
+            text-transform: uppercase; color: var(--text-3);
         }
-        .section-head .meta { font-size: 0.8125rem; color: #6b7280; }
+        .section-head .meta { font-size: 0.8125rem; color: var(--text-3); }
 
         /* 섹션 자체가 잠금 해제 버튼이다 — 하단 바에 버튼을 하나 더 두지 않는다. */
         .memo-locked {
             display: block;
             width: 100%;
-            border: 1px dashed #2a2f3a;
+            border: 1px dashed var(--border-strong);
             border-radius: 0.625rem;
             padding: 0.7rem 1rem;
             background: transparent;
             text-align: center;
-            color: #6b7280;
+            color: var(--text-3);
             font-size: 0.8125rem;
         }
-        .memo-locked:active { border-color: #3a4150; background: #14171d; }
+        .memo-locked:active { border-color: var(--text-3); background: var(--surface-2); }
         .memo-locked:disabled { opacity: 0.6; }
         .memo-locked[hidden] { display: none; }
 
@@ -115,23 +104,23 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
             width: 100%;
             margin-top: 0.25rem;
             padding: 0.65rem 1rem;
-            border: 1px solid #2a2f3a;
+            border: 1px solid var(--border);
             border-radius: 0.625rem;
             background: transparent;
-            color: #8b929e;
+            color: var(--text-2);
             font-size: 0.8125rem;
         }
-        .memo-more:active { background: #14171d; }
+        .memo-more:active { background: var(--surface-2); }
         .memo-more[hidden] { display: none; }
         .memo-card {
-            border: 1px solid #2a2f3a;
+            border: 1px solid var(--border);
             border-radius: 0.75rem;
-            background: #14171d;
+            background: var(--surface);
             padding: 0.85rem;
             margin-bottom: 0.6rem;
         }
-        .memo-card time { display: block; margin-bottom: 0.3rem; font-size: 0.75rem; color: #6b7280; }
-        .memo-card p { margin: 0; font-size: 0.9375rem; line-height: 1.65; white-space: pre-wrap; color: #d5d9df; }
+        .memo-card time { display: block; margin-bottom: 0.3rem; font-size: 0.75rem; color: var(--text-3); }
+        .memo-card p { margin: 0; font-size: 0.9375rem; line-height: 1.65; white-space: pre-wrap; color: var(--text); }
 
         /* 달 구분자 — 목록이 날짜 내림차순이라 자연히 묶인다 */
         .month {
@@ -140,54 +129,47 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
             gap: 0.75rem;
             margin: 1.75rem 0 0.85rem;
             font-size: 0.8125rem;
-            color: #6b7280;
+            color: var(--text-3);
         }
         .month::after {
             content: "";
             flex: 1;
             height: 1px;
-            background: #1c2027;
+            background: var(--border);
         }
         .month:first-of-type { margin-top: 0; }
 
         .note {
             display: block;
-            border: 1px solid #2a2f3a;
+            border: 1px solid var(--border);
             border-radius: 0.625rem;
-            background: #14171d;
+            background: var(--surface);
             padding: 0.85rem;
             margin-bottom: 0.6rem;
             text-decoration: none;
         }
-        .note:active { border-color: #3a4150; }
+        .note:active { border-color: var(--border-strong); }
         .note-top { display: flex; justify-content: space-between; gap: 0.75rem; align-items: baseline; }
-        .note h3 { margin: 0; font-size: 0.9375rem; line-height: 1.45; font-weight: 600; color: #e6e8eb; }
-        .note .date { flex: none; font-size: 0.6875rem; color: #6b7280; }
-        .note .summary { margin: 0.45rem 0 0; font-size: 0.8125rem; line-height: 1.6; color: #8b929e; }
+        .note h3 { margin: 0; font-size: 0.9375rem; line-height: 1.45; font-weight: 600; color: var(--text); }
+        .note .date { flex: none; font-size: 0.6875rem; color: var(--text-3); }
+        .note .summary { margin: 0.45rem 0 0; font-size: 0.8125rem; line-height: 1.6; color: var(--text-2); }
         .tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.75rem; }
-        .tag { font-size: 0.6875rem; color: #8b929e; background: #1c2027; border-radius: 999px; padding: 0.15rem 0.5rem; }
+        .tag { font-size: 0.6875rem; color: var(--text-2); background: var(--surface-2); border-radius: 999px; padding: 0.15rem 0.5rem; }
 
         footer {
-            max-width: 42rem; margin: 3.5rem auto 0; padding: 2rem 1rem;
-            text-align: center; color: #3a4150; font-size: 0.8125rem; letter-spacing: 0.1em;
+            max-width: var(--shell); margin: 3.5rem auto 0; padding: 2rem 1rem;
+            text-align: center; color: var(--border-strong); font-size: 0.8125rem; letter-spacing: 0.1em;
         }
 
         /* 배너 — 내 기기에서만 보인다 (미전송 큐 / 토큰 만료) */
-        #banners { max-width: 42rem; margin: 1rem auto 0; padding: 0 1rem; }
+        #banners { max-width: var(--shell); margin: 1rem auto 0; padding: 0 1rem; }
         .banner { border-radius: 0.5rem; padding: 0.6rem 0.75rem; font-size: 0.8125rem; line-height: 1.45; margin-bottom: 0.5rem; }
-        .banner--pending { background: #3a2d0b; border: 1px solid #6b5410; color: #f0d78c; }
-        .banner--expiry  { background: #3a1414; border: 1px solid #7a2323; color: #f3a9a9; }
+        .banner--pending { background: var(--warn-bg); border: 1px solid var(--warn-border); color: var(--warn-text); }
+        .banner--expiry  { background: var(--err-bg); border: 1px solid var(--err-border); color: var(--err-text); }
 
-        button {
-            font: inherit;
-            border-radius: 0.75rem;
-            border: 1px solid transparent;
-            padding: 0.85rem 1rem;
-            cursor: pointer;
-        }
-        .btn-primary { flex: 1; background: #2563eb; color: #fff; font-weight: 600; }
-        .btn-primary:active { background: #1d4ed8; }
-        .btn-primary:disabled { opacity: 0.45; }
+        /* .btn-primary / .btn-ghost 의 기본형은 style-base.html 에 있다. */
+        .btn-primary { flex: 1; }
+
         /* 잠긴 상자('눌러서 열기')와 같은 크기로 — 화면을 지배하지 않는다 */
         .compose-wrap { padding-bottom: 0.75rem; }
         .compose-btn {
@@ -196,14 +178,12 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
             padding: 0.7rem 1rem;
             border-radius: 0.625rem;
             border: 1px solid transparent;
-            background: #2563eb;
+            background: var(--accent);
             color: #fff;
             font-size: 0.8125rem;
             font-weight: 600;
         }
-        .compose-btn:active { background: #1d4ed8; }
-        .btn-ghost { background: #171a21; border-color: #2a2f3a; color: #aeb4bf; font-size: 0.875rem; }
-        .btn-ghost:active { background: #1c2027; }
+        .compose-btn:active { background: var(--accent-strong); }
 
         /* 바텀시트 */
         .sheet {
@@ -213,26 +193,27 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
             display: none;
             align-items: flex-end;
             justify-content: center;
-            background: rgba(0, 0, 0, 0.65);
+            background: rgba(34, 38, 43, 0.45);
         }
         .sheet[data-open="1"] { display: flex; }
         .sheet > form {
             width: 100%;
-            max-width: 42rem;
+            max-width: var(--shell);
             max-height: 85dvh;
             overflow-y: auto;
-            background: #171a21;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
             border-radius: 1rem 1rem 0 0;
             padding: 1.25rem;
             padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
             /* 키보드가 올라오면 그 위에 붙는다 (visualViewport 로 --kb 갱신) */
             margin-bottom: var(--kb, 0px);
         }
-        .sheet label { display: block; font-size: 0.875rem; color: #aeb4bf; }
-        .sheet-title { margin: 0 0 0.5rem; font-size: 1rem; font-weight: 600; color: #e6e8eb; }
-        .sheet-note { margin: 0 0 1rem; font-size: 0.8125rem; line-height: 1.5; color: #8b929e; }
-        .sheet-note b { color: #aeb4bf; }
-        .sheet-note a { color: #60a5fa; text-decoration: none; font-weight: 600; }
+        .sheet label { display: block; font-size: 0.875rem; color: var(--text-2); }
+        .sheet-title { margin: 0 0 0.5rem; font-size: 1rem; font-weight: 600; color: var(--text); }
+        .sheet-note { margin: 0 0 1rem; font-size: 0.8125rem; line-height: 1.5; color: var(--text-2); }
+        .sheet-note b { color: var(--text); }
+        .sheet-note a { color: var(--accent); text-decoration: none; font-weight: 600; }
         .row { display: flex; gap: 0.75rem; margin-top: 0.75rem; }
 
         #memo {
@@ -240,42 +221,31 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
             min-height: 38dvh;
             resize: none;
             padding: 1rem;
-            border: 1px solid #2a2f3a;
+            border: 1px solid var(--border);
             border-radius: 0.75rem;
-            background: #0f1115;
-            color: #e6e8eb;
+            background: var(--bg);
+            color: var(--text);
             font: inherit;
             line-height: 1.7;
             outline: none;
         }
-        #memo:focus { border-color: #4b5563; }
-        #memo::placeholder { color: #5a6070; }
+        #memo:focus { border-color: var(--accent); }
+        #memo::placeholder { color: var(--text-3); }
 
         input[type="password"], input[type="date"] {
             width: 100%;
             margin-top: 0.5rem;
             padding: 0.75rem;
-            border: 1px solid #3a4150;
+            border: 1px solid var(--border-strong);
             border-radius: 0.5rem;
-            background: #0f1115;
-            color: #e6e8eb;
+            background: var(--bg);
+            color: var(--text);
             font: inherit;
             outline: none;
         }
-        input:focus { border-color: #2563eb; }
-        .error { margin: 0.5rem 0 0; font-size: 0.875rem; color: #f3a9a9; }
+        input:focus { border-color: var(--accent); }
+        .error { margin: 0.5rem 0 0; font-size: 0.875rem; color: var(--err-text); }
         .error[hidden] { display: none; }
-
-        /* 비밀번호 관리자에게는 보이고 사람에게는 안 보이는 아이디 칸 */
-        .offscreen {
-            position: absolute;
-            width: 1px; height: 1px;
-            margin: -1px; padding: 0; border: 0;
-            overflow: hidden;
-            clip: rect(0 0 0 0);
-            clip-path: inset(50%);
-            white-space: nowrap;
-        }
 
         #toast {
             position: fixed;
@@ -283,9 +253,8 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
             bottom: calc(2rem + env(safe-area-inset-bottom));
             transform: translateX(-50%);
             z-index: 60;
-            background: #1c2027;
-            border: 1px solid #2a2f3a;
-            color: #d5d9df;
+            background: var(--text);
+            color: var(--bg);
             font-size: 0.875rem;
             padding: 0.6rem 1rem;
             border-radius: 999px;
@@ -423,7 +392,7 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         </p>
         <label for="tk">토큰</label>
         <input id="tk" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…">
-        <label for="tk-exp" style="margin-top:0.75rem">만료일 <span style="color:#6b7280">— 90일로 발급했다면 그대로</span></label>
+        <label for="tk-exp" style="margin-top:0.75rem">만료일 <span style="color:var(--text-3)">— 90일로 발급했다면 그대로</span></label>
         <input id="tk-exp" type="date">
         <p id="tk-error" class="error" hidden></p>
         <div class="row">

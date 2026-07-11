@@ -11,7 +11,10 @@ baseurl: ""
 lang: ko
 author: 라도훈
 
-theme: jekyll-theme-primer
+# 테마를 쓰지 않는다.
+# jekyll-theme-primer 는 /assets/css/style.css 를 만들어 붙였는데,
+# 그 GitHub 문서 스타일이 루트 페이지와 전혀 다른 사이트처럼 보이게 했다.
+# 레이아웃과 스타일은 _layouts/default.html + _includes/style-base.html 에 직접 둔다.
 plugins:
   - jekyll-seo-tag
 

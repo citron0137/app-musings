@@ -18,7 +18,10 @@ permalink: /sw.js
  * api.github.com 은 절대 캐시하지 않는다 —
  * 캐시된 응답을 "전송 성공"으로 오인하면 메모가 사라진다.
  */
-const CACHE = 'musings-v1';
+// 버전을 올리면 activate 가 옛 캐시를 통째로 지운다.
+// v2: 라이트 테마 전환 — '/' 와 manifest 가 프리캐시돼 있어서,
+//     버전을 안 올리면 기존 방문자에게 다크 버전이 계속 나온다.
+const CACHE = 'musings-v2';
 const SHELL = ['/', '/js/musings-crypto.js', '/manifest.webmanifest'];
 const TOKEN_PATH = '/token.enc';
 const DOC_TIMEOUT_MS = 2000;

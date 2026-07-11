@@ -1,0 +1,87 @@
+{%- comment -%}
+  팔레트·타이포 토큰의 단일 출처.
+
+  index.html 과 _layouts/default.html 이 각각 이 파일을 include 한다.
+  Jekyll 이 빌드 때 인라인으로 박아넣으므로 네트워크 요청은 늘지 않는다 —
+  두 페이지 모두 마스터 비밀번호를 입력받는 곳이라 외부 리소스를 둘 수 없고,
+  그렇다고 팔레트를 두 파일에 복사해두면 한쪽만 고치는 날이 온다.
+{%- endcomment -%}
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  :root {
+    color-scheme: light;
+
+    /* 종이. 순백(#fff)은 긴 글을 읽을 때 눈이 아프다 — 살짝 따뜻하게 죽인다. */
+    --bg: #fbfaf9;
+    --surface: #ffffff;
+    --surface-2: #f2f0ec;
+
+    --border: #e5e1da;
+    --border-strong: #cec8be;
+
+    --text: #22262b;
+    --text-2: #5b6169;
+    --text-3: #8a9099;
+
+    --accent: #2563eb;
+    --accent-strong: #1d4ed8;
+
+    --warn-bg: #fdf7e7;
+    --warn-border: #e6d5a4;
+    --warn-text: #7a5c12;
+
+    --err-bg: #fdf1f1;
+    --err-border: #efc9c9;
+    --err-text: #9b2c2c;
+
+    /* 한글 산문 측정선. 카드·목록은 --shell, 읽는 본문은 --measure. */
+    --measure: 36em;
+    --shell: 42rem;
+
+    /* 키보드가 올라온 높이 (visualViewport 로 갱신) */
+    --kb: 0px;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo",
+                 "Noto Sans KR", sans-serif;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; }
+
+  button {
+    font: inherit;
+    border-radius: 0.75rem;
+    border: 1px solid transparent;
+    padding: 0.85rem 1rem;
+    cursor: pointer;
+  }
+  .btn-primary { background: var(--accent); color: #fff; font-weight: 600; }
+  .btn-primary:active { background: var(--accent-strong); }
+  .btn-primary:disabled { opacity: 0.45; }
+  .btn-ghost {
+    background: var(--surface);
+    border-color: var(--border-strong);
+    color: var(--text-2);
+    font-size: 0.875rem;
+  }
+  .btn-ghost:active { background: var(--surface-2); }
+
+  /* 비밀번호 관리자에게는 보이고 사람에게는 안 보이는 아이디 칸.
+     display:none 은 관리자가 무시하므로 쓰면 안 된다. */
+  .offscreen {
+    position: absolute;
+    width: 1px; height: 1px;
+    margin: -1px; padding: 0; border: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+</style>
