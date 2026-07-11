@@ -1,0 +1,9 @@
+#!/bin/sh
+# .enc 무결성 재검증 (push 직전).
+#
+# pre-commit 을 --no-verify 로 우회했거나 훅 미설치 환경에서 만든 커밋이
+# 그대로 remote 로 나가는 것을 막기 위한 마지막 그물망. pre-commit 과
+# 동일한 검증을 그대로 재사용.
+#
+# 우회: git push --no-verify
+exec "$(dirname "$0")/pre-commit"

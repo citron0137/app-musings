@@ -1,0 +1,225 @@
+{%- comment -%}
+  잠긴 사색 노트 — 인라인 토글
+  사용:
+    {% raw %}{% include locked-musing.html id="2026-04-22-ys" %}{% endraw %}
+    {% raw %}{% include locked-musing.html id="2026-04-22-ys" label="🔒 YS 단락" %}{% endraw %}
+
+  - 사이트 전체 단일 비밀번호 (인메모리 캐시만)
+  - 같은 페이지 세션에서는 한 번 입력하면 재입력 불필요 (다른 잠긴 노트도 같이 풀림)
+  - 새로고침 / 탭 종료 / 다른 페이지 이동 → 재입력 필요
+{%- endcomment -%}
+{%- assign id = include.id -%}
+{%- assign label = include.label | default: "🔒 솔직하지만 부끄러운 감정" -%}
+<div class="locked-musing" data-id="{{ id }}" data-label="{{ label }}">
+  <button type="button" class="locked-musing__toggle">{{ label }} — 보기</button>
+  <form class="locked-musing__form" hidden>
+    <input type="password" class="locked-musing__pw" placeholder="비밀번호" autocomplete="off" autocapitalize="off">
+    <button type="submit">확인</button>
+    <span class="locked-musing__error" hidden></span>
+  </form>
+  <pre class="locked-musing__content" hidden></pre>
+</div>
+
+<script>
+(function () {
+  if (window.__lockedMusingInited) return;
+  window.__lockedMusingInited = true;
+
+  const SALT = 'rahoon_musings_2026';
+  const ITERATIONS = 100000;
+  const ASSET_BASE = '{{ "/musings/locked/" | relative_url }}';
+
+  // 비번/키/평문은 모두 인메모리 캐시만 — 새로고침 시 모두 휘발 → 비번 재입력 필요
+  const textCache = new Map();   // id -> 평문 (현재 페이지 세션 내)
+  let cachedPassword = null;
+  let cachedKey = null;
+  let cachedKeyForPw = null;
+
+  async function deriveKey(password) {
+    if (cachedKeyForPw === password && cachedKey) return cachedKey;
+    const enc = new TextEncoder();
+    const km = await crypto.subtle.importKey(
+      'raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']
+    );
+    cachedKey = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt: enc.encode(SALT), iterations: ITERATIONS, hash: 'SHA-256' },
+      km,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['decrypt']
+    );
+    cachedKeyForPw = password;
+    return cachedKey;
+  }
+
+  function b64(s) { return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
+
+  async function decryptBlob(encJson, password) {
+    const { iv, tag, data } = JSON.parse(encJson);
+    const key = await deriveKey(password);
+    const ivBuf = b64(iv);
+    const tagBuf = b64(tag);
+    const dataBuf = b64(data);
+    const cipher = new Uint8Array(dataBuf.length + tagBuf.length);
+    cipher.set(dataBuf);
+    cipher.set(tagBuf, dataBuf.length);
+    const dec = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: ivBuf }, key, cipher);
+    return new TextDecoder().decode(dec);
+  }
+
+  async function fetchAndDecrypt(id, password) {
+    if (textCache.has(id)) return textCache.get(id);
+    const res = await fetch(ASSET_BASE + id + '.enc', { cache: 'no-cache' });
+    if (!res.ok) throw new Error('not_found');
+    const text = await res.text();
+    const plain = await decryptBlob(text, password);
+    textCache.set(id, plain);
+    return plain;
+  }
+
+  function setOpen(el, text) {
+    el.querySelector('.locked-musing__content').textContent = text;
+    el.querySelector('.locked-musing__content').hidden = false;
+    el.querySelector('.locked-musing__form').hidden = true;
+    el.querySelector('.locked-musing__toggle').textContent =
+      (el.dataset.label || '🔒 솔직하지만 부끄러운 감정') + ' — 닫기';
+    el.dataset.open = '1';
+  }
+
+  function setClosed(el) {
+    el.querySelector('.locked-musing__content').hidden = true;
+    el.querySelector('.locked-musing__toggle').textContent =
+      (el.dataset.label || '🔒 솔직하지만 부끄러운 감정') + ' — 보기';
+    el.dataset.open = '';
+  }
+
+  function showForm(el) {
+    el.querySelector('.locked-musing__error').hidden = true;
+    el.querySelector('.locked-musing__form').hidden = false;
+    setTimeout(() => el.querySelector('.locked-musing__pw').focus(), 0);
+  }
+
+  function showError(el, msg) {
+    const err = el.querySelector('.locked-musing__error');
+    err.textContent = msg;
+    err.hidden = false;
+  }
+
+  async function tryOpen(el) {
+    const id = el.dataset.id;
+    if (textCache.has(id)) {
+      setOpen(el, textCache.get(id));
+      return;
+    }
+    if (cachedPassword) {
+      try {
+        const text = await fetchAndDecrypt(id, cachedPassword);
+        setOpen(el, text);
+        return;
+      } catch (e) {
+        cachedPassword = null;
+        cachedKey = null; cachedKeyForPw = null;
+      }
+    }
+    showForm(el);
+  }
+
+  function init(el) {
+    if (el.dataset.inited === '1') return;
+    el.dataset.inited = '1';
+
+    el.querySelector('.locked-musing__toggle').addEventListener('click', () => {
+      if (el.dataset.open === '1') return setClosed(el);
+      tryOpen(el);
+    });
+
+    el.querySelector('.locked-musing__form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = el.querySelector('.locked-musing__pw');
+      const pw = input.value;
+      if (!pw) return;
+      try {
+        const text = await fetchAndDecrypt(el.dataset.id, pw);
+        cachedPassword = pw;
+        input.value = '';
+        setOpen(el, text);
+      } catch (err) {
+        showError(el, '비밀번호가 맞지 않거나 파일을 불러올 수 없습니다.');
+        input.value = '';
+        input.focus();
+        cachedPassword = null;
+        cachedKey = null; cachedKeyForPw = null;
+      }
+    });
+  }
+
+  function initAll() {
+    document.querySelectorAll('.locked-musing').forEach(init);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAll);
+  } else {
+    initAll();
+  }
+})();
+</script>
+
+<style>
+.locked-musing {
+  margin: 1.5rem 0;
+  padding: 0.85rem 1rem;
+  border: 1px dashed #d1d5db;
+  border-radius: 6px;
+  background: #f9fafb;
+}
+.locked-musing__toggle {
+  font-size: 0.9rem;
+  background: #fff;
+  border: 1px solid #9ca3af;
+  border-radius: 4px;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  color: #374151;
+  font-family: inherit;
+}
+.locked-musing__toggle:hover { background: #f3f4f6; }
+.locked-musing__form {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.locked-musing__pw {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  min-width: 180px;
+  font-family: inherit;
+}
+.locked-musing__form button {
+  padding: 0.4rem 0.85rem;
+  border: 1px solid #9ca3af;
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+.locked-musing__error { color: #b91c1c; font-size: 0.85rem; }
+.locked-musing__content {
+  margin-top: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: #fff;
+  border-radius: 4px;
+  border-left: 3px solid #6366f1;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: #374151;
+}
+</style>

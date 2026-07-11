@@ -1,0 +1,27 @@
+#!/bin/sh
+# 잠긴 파일(.enc) 무결성 검증 pre-commit hook
+#
+# staging 여부와 관계없이 워킹트리의 모든 .enc 를 복호화해서
+# 평문과 일치하는지 검사. 불일치 시 커밋 차단 (재암호화 필요).
+#
+# 우회: git commit --no-verify
+#
+# 시스템: musings/locked/*.enc, dashboard/links-private.enc
+
+# Node 실행 파일 찾기 (Windows 에서 git 의 sh 에 PATH 가 없을 수 있음)
+NODE_BIN=""
+if command -v node >/dev/null 2>&1; then
+  NODE_BIN="node"
+elif [ -x "/c/Program Files/nodejs/node.exe" ]; then
+  NODE_BIN="/c/Program Files/nodejs/node.exe"
+elif [ -x "/c/Program Files (x86)/nodejs/node.exe" ]; then
+  NODE_BIN="/c/Program Files (x86)/nodejs/node.exe"
+fi
+
+if [ -z "$NODE_BIN" ]; then
+  echo "[pre-commit] node 를 찾을 수 없습니다 — PATH 또는 기본 위치에 없음." >&2
+  echo "[pre-commit] 우회: git commit --no-verify" >&2
+  exit 1
+fi
+
+exec "$NODE_BIN" "$(dirname "$0")/validate-enc.js"
