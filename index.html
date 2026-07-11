@@ -188,7 +188,20 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         .btn-primary { flex: 1; background: #2563eb; color: #fff; font-weight: 600; }
         .btn-primary:active { background: #1d4ed8; }
         .btn-primary:disabled { opacity: 0.45; }
-        .compose-btn { display: block; width: 100%; margin-top: 1.25rem; }
+        /* 잠긴 상자('눌러서 열기')와 같은 크기로 — 화면을 지배하지 않는다 */
+        .compose-wrap { padding-bottom: 0.75rem; }
+        .compose-btn {
+            display: block;
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border-radius: 0.625rem;
+            border: 1px solid transparent;
+            background: #2563eb;
+            color: #fff;
+            font-size: 0.8125rem;
+            font-weight: 600;
+        }
+        .compose-btn:active { background: #1d4ed8; }
         .btn-ghost { background: #171a21; border-color: #2a2f3a; color: #aeb4bf; font-size: 0.875rem; }
         .btn-ghost:active { background: #1c2027; }
 
@@ -290,6 +303,12 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
 
     <div id="banners"></div>
 
+    <!-- 최근 메모 바로 위. 홈 화면 앱은 start_url=/?compose=1 이라 이 버튼을 거치지 않는다 —
+         브라우저로 열었을 때를 위한 것이다. -->
+    <div class="edge compose-wrap">
+        <button type="button" class="compose-btn" id="open-compose">메모 쓰기</button>
+    </div>
+
     <!--
       최근 메모 — 개수와 마지막 시각만 보이고 내용은 잠겨 있다.
       화면에 들어올 때만 GitHub API 를 부른다 (메모만 쓰고 나가면 안 부른다).
@@ -302,11 +321,6 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         <button type="button" class="memo-locked" id="recent-locked">눌러서 열기</button>
         <div id="recent-list"></div>
         <button type="button" class="memo-more" id="recent-more" hidden></button>
-
-        <!-- 첫 화면의 맨 아래 = 엄지가 가장 편한 곳.
-             홈 화면 앱은 start_url=/?compose=1 이라 이 버튼을 거치지 않는다 —
-             브라우저로 열었을 때를 위한 것이다. -->
-        <button type="button" class="btn-primary compose-btn" id="open-compose">메모 쓰기</button>
     </section>
 </div>
 
