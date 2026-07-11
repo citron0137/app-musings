@@ -148,6 +148,14 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
             margin: 0 auto;
             padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
             background: linear-gradient(to top, #0f1115 70%, rgba(15, 17, 21, 0));
+            transition: transform 0.22s ease, opacity 0.22s ease;
+        }
+        /* 스크롤을 내린다 = 읽는 중 → 버튼이 화면 아래를 차지할 이유가 없다.
+           위로 올리면 = 쓰려는 동작 → 다시 나타난다. */
+        .dock[data-hidden="1"] {
+            transform: translateY(120%);
+            opacity: 0;
+            pointer-events: none;
         }
         button {
             font: inherit;
@@ -456,8 +464,16 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         }
     }
 
-    const openSheet = (id) => { $(id).dataset.open = '1'; };
-    const closeSheet = (id) => { $(id).dataset.open = ''; };
+    const dock = document.querySelector('.dock');
+    const setDock = (visible) => { dock.dataset.hidden = visible ? '' : '1'; };
+
+    // 시트가 열려 있으면 하단 바를 숨긴다 (반투명 배경 뒤로 비치는 것을 막는다)
+    const openSheet = (id) => { $(id).dataset.open = '1'; setDock(false); };
+    const closeSheet = (id) => {
+        $(id).dataset.open = '';
+        const anyOpen = ['compose-sheet', 'pw-sheet', 'tk-sheet'].some((s) => $(s).dataset.open === '1');
+        if (!anyOpen) setDock(true);
+    };
 
     function askPassword(action) {
         pendingAction = action;
@@ -773,6 +789,39 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
     ['compose-sheet', 'pw-sheet', 'tk-sheet'].forEach((id) => {
         $(id).addEventListener('click', (e) => { if (e.target === $(id)) closeSheet(id); });
     });
+
+    // 스크롤 방향으로 읽기/쓰기 의도를 구분한다.
+    // 내린다 = 읽는 중 → 하단 바를 치운다. 올린다 = 쓰려는 동작 → 다시 꺼낸다.
+    (function watchScroll() {
+        const THRESHOLD = 8;      // 손떨림 무시
+        const TOP_ZONE = 120;     // 맨 위에서는 항상 보인다
+        let last = window.scrollY;
+        let ticking = false;
+
+        const update = () => {
+            ticking = false;
+            const y = window.scrollY;
+            const delta = y - last;
+
+            // 시트가 열려 있으면 스크롤이 하단 바를 되살리면 안 된다.
+            const sheetOpen = ['compose-sheet', 'pw-sheet', 'tk-sheet']
+                .some((s) => $(s).dataset.open === '1');
+            if (sheetOpen) { last = y; return; }
+
+            if (y < TOP_ZONE) setDock(true);
+            else if (delta > THRESHOLD) setDock(false);
+            else if (delta < -THRESHOLD) setDock(true);
+
+            if (Math.abs(delta) > THRESHOLD) last = y;
+        };
+
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                ticking = true;
+                requestAnimationFrame(update);
+            }
+        }, { passive: true });
+    })();
 
     // 키보드가 올라오면 시트를 그 위에 붙인다.
     if (window.visualViewport) {
