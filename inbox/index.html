@@ -191,7 +191,7 @@ permalink: /inbox/
         <label for="tk">토큰</label>
         <input id="tk" type="password" autocomplete="off" autocapitalize="off" spellcheck="false"
                placeholder="github_pat_…">
-        <label for="tk-exp" style="margin-top:0.75rem">만료일</label>
+        <label for="tk-exp" style="margin-top:0.75rem">만료일 <span style="color:#6b7280">— 90일로 발급했다면 그대로 두세요</span></label>
         <input id="tk-exp" type="date">
         <p id="tk-error" hidden></p>
         <div class="row">
@@ -512,11 +512,15 @@ permalink: /inbox/
         error.textContent = reason || '';
         error.hidden = !reason;
         $('tk').value = '';
-        $('tk-exp').value = '';
-        // 만료일 입력을 오늘~90일로 제한한다 — UI 에서도 상한을 강제해야 구멍이 안 생긴다.
+
+        // 만료일은 브라우저가 GitHub 에서 읽어올 수 없다 —
+        // github-authentication-token-expiration 헤더가 CORS 로 노출되지 않는다.
+        // 그래서 사람이 넣어야 하는데, 정상 흐름은 "90일로 발급하고 곧바로 등록"이므로
+        // 오늘+90일을 미리 채워둔다. 타이핑 없이 그대로 등록하면 맞는 값이 된다.
         const iso = (ms) => new Date(ms + 9 * 3600 * 1000).toISOString().slice(0, 10);
         $('tk-exp').min = iso(Date.now());
         $('tk-exp').max = iso(Date.now() + MAX_TOKEN_DAYS * 86400000);
+        $('tk-exp').value = iso(Date.now() + MAX_TOKEN_DAYS * 86400000);
         $('tk-sheet').dataset.open = '1';
         setTimeout(() => $('tk').focus(), 50);
     }
