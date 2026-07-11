@@ -36,3 +36,4 @@ exclude:
   - _scripts
   - .githooks
   - README.md
+  - CLAUDE.md
