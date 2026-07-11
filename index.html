@@ -266,6 +266,17 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         .error { margin: 0.5rem 0 0; font-size: 0.875rem; color: #f3a9a9; }
         .error[hidden] { display: none; }
 
+        /* 비밀번호 관리자에게는 보이고 사람에게는 안 보이는 아이디 칸 */
+        .offscreen {
+            position: absolute;
+            width: 1px; height: 1px;
+            margin: -1px; padding: 0; border: 0;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            clip-path: inset(50%);
+            white-space: nowrap;
+        }
+
         #toast {
             position: fixed;
             left: 50%;
@@ -378,9 +389,17 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
 
 <!-- 비밀번호는 저장을 누른 뒤에 묻는다. 인증이 생각을 가로막으면 안 된다. -->
 <div class="sheet" id="pw-sheet">
-    <form id="pw-form">
+    <form id="pw-form" action="#" method="post">
+        <!--
+          비밀번호 관리자는 '아이디 + 비밀번호'가 한 폼에 있어야 로그인으로 인식하고
+          저장·자동완성을 제안한다. 비밀번호 칸만 있으면 대부분 그냥 무시한다.
+          그래서 고정 아이디 칸을 화면 밖에 둔다 (display:none 은 관리자가 무시하므로 안 됨).
+        -->
+        <input type="text" id="pw-user" name="username" value="musings"
+               autocomplete="username" readonly tabindex="-1" aria-hidden="true" class="offscreen">
         <label for="pw">비밀번호</label>
-        <input id="pw" type="password" autocomplete="current-password" autocapitalize="off" spellcheck="false">
+        <input id="pw" name="password" type="password" autocomplete="current-password"
+               autocapitalize="off" spellcheck="false">
         <p id="pw-error" class="error" hidden></p>
         <div class="row">
             <button type="button" id="pw-cancel" class="btn-ghost" style="flex:1">취소</button>
