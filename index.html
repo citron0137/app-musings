@@ -119,6 +119,23 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         .memo-card time { display: block; margin-bottom: 0.3rem; font-size: 0.75rem; color: #6b7280; }
         .memo-card p { margin: 0; font-size: 0.9375rem; line-height: 1.65; white-space: pre-wrap; color: #d5d9df; }
 
+        /* 달 구분자 — 목록이 날짜 내림차순이라 자연히 묶인다 */
+        .month {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin: 1.75rem 0 0.85rem;
+            font-size: 0.8125rem;
+            color: #6b7280;
+        }
+        .month::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #1c2027;
+        }
+        .month:first-of-type { margin-top: 0; }
+
         .note {
             display: block;
             border: 1px solid #2a2f3a;
@@ -306,11 +323,17 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
             | where_exp: "p", "p.hidden != true"
             | sort: "date"
             | reverse %}
+        {% assign current_month = "" %}
         {% for note in notes %}
+        {% assign month = note.date | date: "%Y년 %-m월" %}
+        {% if month != current_month %}
+        <div class="month">{{ month }}</div>
+        {% assign current_month = month %}
+        {% endif %}
         <a class="note" href="{{ note.url | relative_url }}">
             <div class="note-top">
                 <h3>{{ note.title }}</h3>
-                <span class="date">{{ note.date | date: "%Y.%m.%d" }}</span>
+                <span class="date">{{ note.date | date: "%-d" }}일</span>
             </div>
             {% if note.summary %}<p class="summary">{{ note.summary }}</p>{% endif %}
             {% if note.tags and note.tags.size > 0 %}
