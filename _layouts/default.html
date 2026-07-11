@@ -9,6 +9,8 @@
 {% seo %}
     <link rel="stylesheet" href="{{ "/assets/css/style.css?v=" | append: site.github.build_revision | relative_url }}">
     {% include head-custom.html %}
+    <!-- 잠긴 노트 복호화. 메모 앱(/inbox/)과 같은 모듈을 쓴다 — KDF 상수의 단일 출처. -->
+    <script src="{{ "/js/musings-crypto.js" | relative_url }}"></script>
   </head>
   <body>
     <div class="container-lg px-3 my-5 markdown-body">

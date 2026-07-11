@@ -25,55 +25,20 @@
   if (window.__lockedMusingInited) return;
   window.__lockedMusingInited = true;
 
-  const SALT = 'rahoon_musings_2026';
-  const LEGACY_ITERATIONS = 100000;  // v1 (.enc 에 iter 필드가 없던 시절)
+  // 복호화는 /js/musings-crypto.js 한 곳에만 있다 (메모 앱과 공유).
+  // KDF 상수가 여러 파일에 흩어지면, 파라미터를 바꿀 때 한 곳을 빠뜨려 노트가 안 열린다.
   const ASSET_BASE = '{{ "/locked/" | relative_url }}';
 
-  // 비번/키/평문은 모두 인메모리 캐시만 — 새로고침 시 모두 휘발 → 비번 재입력 필요
+  // 비번/평문은 인메모리 캐시만 — 새로고침 시 모두 휘발 → 비번 재입력 필요
   const textCache = new Map();   // id -> 평문 (현재 페이지 세션 내)
-  const keyCache = new Map();    // "<반복수>:<비번>" -> CryptoKey
   let cachedPassword = null;
-
-  // 반복 횟수는 .enc 의 iter 필드에서 읽는다 — 파라미터를 올려도 옛 파일이 열리도록.
-  async function deriveKey(password, iterations) {
-    const cacheKey = iterations + ':' + password;
-    if (keyCache.has(cacheKey)) return keyCache.get(cacheKey);
-    const enc = new TextEncoder();
-    const km = await crypto.subtle.importKey(
-      'raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']
-    );
-    const key = await crypto.subtle.deriveKey(
-      { name: 'PBKDF2', salt: enc.encode(SALT), iterations: iterations, hash: 'SHA-256' },
-      km,
-      { name: 'AES-GCM', length: 256 },
-      false,
-      ['decrypt']
-    );
-    keyCache.set(cacheKey, key);
-    return key;
-  }
-
-  function b64(s) { return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
-
-  async function decryptBlob(encJson, password) {
-    const { iv, tag, data, iter } = JSON.parse(encJson);
-    const key = await deriveKey(password, iter || LEGACY_ITERATIONS);
-    const ivBuf = b64(iv);
-    const tagBuf = b64(tag);
-    const dataBuf = b64(data);
-    const cipher = new Uint8Array(dataBuf.length + tagBuf.length);
-    cipher.set(dataBuf);
-    cipher.set(tagBuf, dataBuf.length);
-    const dec = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: ivBuf }, key, cipher);
-    return new TextDecoder().decode(dec);
-  }
 
   async function fetchAndDecrypt(id, password) {
     if (textCache.has(id)) return textCache.get(id);
     const res = await fetch(ASSET_BASE + id + '.enc', { cache: 'no-cache' });
     if (!res.ok) throw new Error('not_found');
     const text = await res.text();
-    const plain = await decryptBlob(text, password);
+    const plain = await MusingsCrypto.decrypt(text, password);
     textCache.set(id, plain);
     return plain;
   }
@@ -119,7 +84,7 @@
         return;
       } catch (e) {
         cachedPassword = null;
-        keyCache.clear();
+        MusingsCrypto.clearKeyCache();
       }
     }
     showForm(el);
@@ -149,7 +114,7 @@
         input.value = '';
         input.focus();
         cachedPassword = null;
-        keyCache.clear();
+        MusingsCrypto.clearKeyCache();
       }
     });
   }
