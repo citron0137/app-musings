@@ -241,8 +241,20 @@ permalink: /inbox/
                '-' + p(kst.getUTCHours()) + p(kst.getUTCMinutes()) + p(kst.getUTCSeconds());
     }
 
+    /**
+     * 남은 날짜를 KST 달력일 기준으로 센다.
+     *
+     * 시각을 섞으면 안 된다 — 만료일의 끝(23:59:59)까지를 올림하면
+     * 정확히 90일 뒤인 날짜가 91일로 계산되어, 스스로 채운 기본값을 스스로 거부한다.
+     *
+     * 0 = 오늘이 만료일(아직 유효), 음수 = 이미 지남.
+     */
     function daysUntil(dateStr) {
-        return Math.ceil((new Date(dateStr + 'T23:59:59+09:00').getTime() - Date.now()) / 86400000);
+        const kstNow = new Date(Date.now() + 9 * 3600 * 1000);
+        const today = Date.UTC(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate());
+        const parts = dateStr.split('-').map(Number);
+        const target = Date.UTC(parts[0], parts[1] - 1, parts[2]);
+        return Math.round((target - today) / 86400000);
     }
 
     function renderBanners() {
@@ -305,7 +317,8 @@ permalink: /inbox/
         session = { password: password, token: payload.token, expires: payload.expires };
         renderBanners();
 
-        if (daysUntil(payload.expires) <= 0) throw needsToken('토큰이 만료됐습니다.');
+        // 0 = 오늘이 만료일(아직 유효). 음수여야 실제로 지난 것이다.
+        if (daysUntil(payload.expires) < 0) throw needsToken('토큰이 만료됐습니다.');
     }
 
     /**
