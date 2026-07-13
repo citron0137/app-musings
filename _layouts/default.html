@@ -212,7 +212,7 @@
         notes 는 날짜 오름차순 — prev 는 더 오래된 글, next 는 더 새 글.
       {%- endcomment -%}
       {%- unless page.hidden -%}
-        {%- assign notes = site.pages
+        {%- assign notes = site.musings
               | where_exp: "p", "p.date"
               | where_exp: "p", "p.hidden != true"
               | sort: "date" -%}

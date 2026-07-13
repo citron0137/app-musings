@@ -338,7 +338,7 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         <div class="section-head">
             <h2>사색 노트</h2>
         </div>
-        {% assign notes = site.pages
+        {% assign notes = site.musings
             | where_exp: "p", "p.date"
             | where_exp: "p", "p.hidden != true"
             | sort: "date"

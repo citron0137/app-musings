@@ -6,7 +6,8 @@
 
 ```
 <저장소 루트>
-├── <yyyy-mm-dd>-<slug>.md                  ← 사색 노트 본문 (커밋)
+├── _musings/                               ← Jekyll collection (커밋, 사이트에 서빙됨)
+│   └── <yyyy-mm-dd>-<slug>.md              ← 사색 노트 본문
 ├── _locked/                                ← .gitignore + Jekyll exclude (절대 커밋 X)
 │   ├── password.txt                        ← 사이트 전체 단일 비밀번호 (한 줄)
 │   └── <id>.txt                            ← 평문 잠긴 노트
@@ -20,6 +21,8 @@
 ```
 
 > `_locked/` 와 `_scripts/` 는 `_` prefix 폴더라 Jekyll 빌드에서 자동 제외 + `_config.yml` `exclude` 명시. `_locked/` 만 추가로 `.gitignore` 처리.
+>
+> `_musings/` 도 `_` prefix 지만 `_config.yml` 의 `collections` 로 선언해 두었으므로 빌드에 포함된다. `permalink: /:path:output_ext` 라서 URL 은 루트에 있을 때와 동일하다 (`/2026-04-21-....html`).
 
 ## 암호문 포맷
 
@@ -57,7 +60,7 @@ node _scripts/encrypt-locked-musings.js <id>
 #    라벨을 바꾸고 싶을 때만 label 인자 추가
 
 # 4) .enc 와 노트 본문만 커밋
-git add locked/<id>.enc <yyyy-mm-dd>-<slug>.md
+git add locked/<id>.enc _musings/<yyyy-mm-dd>-<slug>.md
 git commit -m "..."
 ```
 

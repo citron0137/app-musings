@@ -18,10 +18,24 @@ author: 라도훈
 plugins:
   - jekyll-seo-tag
 
+# 노트 본문은 _musings/ 안에 둔다.
+# 루트에 두면 공개 레포를 여는 순간 파일 목록이 곧 일기 제목 목록이 된다.
+# permalink 에서 :collection 을 빼 URL 은 루트에 있을 때와 똑같이 유지한다.
+# (예: _musings/2026-04-21-....md → /2026-04-21-....html)
+collections:
+  musings:
+    output: true
+    permalink: /:path:output_ext
+
 defaults:
   - scope:
       path: ""
       type: "pages"
+    values:
+      layout: default
+  - scope:
+      path: ""
+      type: "musings"
     values:
       layout: default
 
