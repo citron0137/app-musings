@@ -232,7 +232,7 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         #memo:focus { border-color: var(--accent); }
         #memo::placeholder { color: var(--text-3); }
 
-        input[type="password"], input[type="date"] {
+        input[type="password"], input[type="date"], input.masked {
             width: 100%;
             margin-top: 0.5rem;
             padding: 0.75rem;
@@ -243,6 +243,9 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
             font: inherit;
             outline: none;
         }
+        /* 비밀번호 칸이 아니면서 가려야 하는 칸(토큰). type=password 로 두면
+           Chrome 이 사이트 비밀번호로 저장해 진짜 비밀번호를 덮어쓴다. */
+        input.masked { -webkit-text-security: disc; }
         input:focus { border-color: var(--accent); }
         .error { margin: 0.5rem 0 0; font-size: 0.875rem; color: var(--err-text); }
         .error[hidden] { display: none; }
@@ -358,14 +361,13 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
 
 <!-- 비밀번호는 저장을 누른 뒤에 묻는다. 인증이 생각을 가로막으면 안 된다. -->
 <div class="sheet" id="pw-sheet">
+    <!--
+      아이디 칸은 두지 않는다. 이 사이트에는 아이디가 없다.
+      화면 밖에 숨긴 가짜 아이디 칸은 Chrome 이 '채울 수 없는 칸'으로 보고
+      아이디 값을 그 다음 칸(=비밀번호 칸)에 넣어버린다.
+      Chrome 은 비밀번호 칸만 있는 폼도 아이디 없이 저장·자동완성한다.
+    -->
     <form id="pw-form" action="#" method="post">
-        <!--
-          비밀번호 관리자는 '아이디 + 비밀번호'가 한 폼에 있어야 로그인으로 인식하고
-          저장·자동완성을 제안한다. 비밀번호 칸만 있으면 대부분 그냥 무시한다.
-          그래서 고정 아이디 칸을 화면 밖에 둔다 (display:none 은 관리자가 무시하므로 안 됨).
-        -->
-        <input type="text" id="pw-user" name="username" value="musings"
-               autocomplete="username" readonly tabindex="-1" aria-hidden="true" class="offscreen">
         <label for="pw">비밀번호</label>
         <input id="pw" name="password" type="password" autocomplete="current-password"
                autocapitalize="off" spellcheck="false">
@@ -391,7 +393,12 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
             · Expiration → <b>90 days</b>
         </p>
         <label for="tk">토큰</label>
-        <input id="tk" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…">
+        <!--
+          type="password" 가 아니다. 비밀번호 칸으로 두면 Chrome 이 토큰을
+          '이 사이트의 비밀번호'로 저장해 진짜 비밀번호 항목을 덮어쓴다.
+          가리기는 CSS(-webkit-text-security)로만 한다.
+        -->
+        <input id="tk" type="text" class="masked" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…">
         <label for="tk-exp" style="margin-top:0.75rem">만료일 <span style="color:var(--text-3)">— 90일로 발급했다면 그대로</span></label>
         <input id="tk-exp" type="date">
         <p id="tk-error" class="error" hidden></p>

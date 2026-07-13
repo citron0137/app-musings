@@ -12,8 +12,13 @@
 {%- assign label = include.label | default: "🔒 솔직하지만 부끄러운 감정" -%}
 <div class="locked-musing" data-id="{{ id }}" data-label="{{ label }}">
   <button type="button" class="locked-musing__toggle">{{ label }} — 보기</button>
+  <!-- autocomplete="current-password" 여야 비밀번호 관리자가 자동완성을 제안한다.
+       "off" 는 제안하지 말라는 뜻이라, 안드로이드에서 매번 손으로 치게 된다.
+       사이트 전체가 비밀번호 하나이므로 메모 시트에서 저장한 것이 여기에도 채워진다. -->
   <form class="locked-musing__form" hidden>
-    <input type="password" class="locked-musing__pw" placeholder="비밀번호" autocomplete="off" autocapitalize="off">
+    <input type="password" class="locked-musing__pw" name="password"
+           placeholder="비밀번호" autocomplete="current-password"
+           autocapitalize="off" spellcheck="false">
     <button type="submit">확인</button>
     <span class="locked-musing__error" hidden></span>
   </form>
