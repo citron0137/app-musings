@@ -248,5 +248,11 @@
 
       <footer>— 끝 —</footer>
     </div>
+
+    {%- comment -%}
+      .wrap 바깥에 둔다 — 오버레이는 position:fixed 라 본문 측정선(--measure)에 갇힐 이유가 없다.
+      목록을 거치지 않고 이 노트로 바로 들어온 사람에게도 안내가 떠야 한다.
+    {%- endcomment -%}
+    {% include first-visit-notice.html %}
   </body>
 </html>

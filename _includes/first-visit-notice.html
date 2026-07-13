@@ -1,0 +1,105 @@
+{%- comment -%}
+  처음 온 사람에게 한 번만 뜨는 안내.
+
+  index.html 과 _layouts/default.html 이 모두 include 한다 —
+  목록을 거치지 않고 노트 링크로 바로 들어오는 사람이 있기 때문이다.
+
+  본 적이 있는지는 localStorage 로만 판단한다. 서버가 없으니 그것뿐이고,
+  지우거나 시크릿 창으로 오면 다시 뜬다 — 그래도 상관없다. 막는 장치가 아니라
+  부탁이므로, 한 번 더 보는 것이 못 본 채 읽는 것보다 낫다.
+{%- endcomment -%}
+<style>
+  .notice {
+    position: fixed;
+    inset: 0;
+    z-index: 70;              /* 시트(50)·토스트(60)보다 위 */
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    background: rgba(34, 38, 43, 0.5);
+  }
+  .notice[data-open="1"] { display: flex; }
+  .notice-box {
+    width: 100%;
+    max-width: 26rem;
+    max-height: 85dvh;
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+  }
+  .notice-box h2 {
+    margin: 0 0 1rem;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .notice-box p {
+    margin: 0 0 1rem;
+    font-size: 0.9375rem;
+    line-height: 1.75;
+    color: var(--text-2);
+    word-break: keep-all;
+  }
+  .notice-box p:last-of-type { margin-bottom: 1.5rem; }
+  /* 돌아가기 · 알겠습니다 — 나가는 쪽이 왼쪽, 들어오는 쪽이 오른쪽 */
+  .notice-row { display: flex; gap: 0.75rem; }
+  .notice-row button { flex: 1; }
+</style>
+
+<div class="notice" id="notice" role="dialog" aria-modal="true" aria-labelledby="notice-title">
+  <div class="notice-box">
+    <h2 id="notice-title">읽기 전에</h2>
+    <p>
+      여기 있는 글은 그때그때의 생각을 적어둔 것입니다. 지금 다시 보면
+      부끄럽고 흑역사 같은 것도 많고, 지금의 생각과는 다른 것도 많습니다.
+    </p>
+    <p>
+      이 글이 부디 서로에게 상처를 주지 않았으면 좋겠습니다.
+    </p>
+    <div class="notice-row">
+      <button type="button" class="btn-ghost" id="notice-leave">돌아가기</button>
+      <button type="button" class="btn-primary" id="notice-ok">알겠습니다</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    var KEY = 'musings.notice.v1';
+    var HOME = 'https://rahoon.site/';   // 히스토리가 없을 때 돌아갈 곳
+    var box = document.getElementById('notice');
+    var ok = document.getElementById('notice-ok');
+    var leave = document.getElementById('notice-leave');
+
+    // 시크릿 창·저장소 차단 환경에서는 읽기/쓰기가 던진다. 그래도 안내는 떠야 한다.
+    function seen() {
+        try { return localStorage.getItem(KEY) === '1'; } catch (e) { return false; }
+    }
+    function remember() {
+        try { localStorage.setItem(KEY, '1'); } catch (e) {}
+    }
+
+    if (seen()) return;
+
+    box.dataset.open = '1';
+    ok.focus();
+
+    ok.addEventListener('click', function () {
+        remember();
+        box.dataset.open = '';
+    });
+
+    // 돌아가기 — 안 봤다는 사실을 남긴다(remember 하지 않는다).
+    // 링크를 새 탭으로 열었거나 주소를 직접 친 사람에겐 뒤로 갈 곳이 없다. 그때는 홈으로.
+    leave.addEventListener('click', function () {
+        if (history.length > 1) history.back();
+        else location.replace(HOME);
+    });
+})();
+</script>
