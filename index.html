@@ -232,7 +232,9 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
         #memo:focus { border-color: var(--accent); }
         #memo::placeholder { color: var(--text-3); }
 
-        input[type="password"], input[type="date"], input.masked {
+        /* .pw-field input 도 함께 잡는다 — '보기' 를 누르면 type 이 text 로 바뀌므로
+           input[type="password"] 만으로는 그 순간 스타일이 통째로 벗겨진다. */
+        input[type="password"], input[type="date"], input.masked, .pw-field input {
             width: 100%;
             margin-top: 0.5rem;
             padding: 0.75rem;
@@ -247,6 +249,26 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
            Chrome 이 사이트 비밀번호로 저장해 진짜 비밀번호를 덮어쓴다. */
         input.masked { -webkit-text-security: disc; }
         input:focus { border-color: var(--accent); }
+
+        /* 비밀번호 칸 + 안쪽에 겹쳐 앉는 보기/숨기기 버튼 */
+        .pw-field { position: relative; margin-top: 0.5rem; }
+        .pw-field input { margin-top: 0; padding-right: 4rem; }
+        .reveal {
+            position: absolute;
+            right: 0.4rem;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 0.4rem 0.6rem;
+            border: 0;
+            border-radius: 0.375rem;
+            background: none;
+            color: var(--text-3);
+            font: inherit;
+            font-size: 0.8125rem;
+            cursor: pointer;
+        }
+        .reveal:hover { color: var(--text-2); }
+        .reveal:active { background: var(--surface-2); color: var(--text); }
         .error { margin: 0.5rem 0 0; font-size: 0.875rem; color: var(--err-text); }
         .error[hidden] { display: none; }
 
@@ -369,8 +391,11 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
     -->
     <form id="pw-form" action="#" method="post">
         <label for="pw">비밀번호</label>
-        <input id="pw" name="password" type="password" autocomplete="current-password"
-               autocapitalize="off" spellcheck="false">
+        <div class="pw-field">
+            <input id="pw" name="password" type="password" autocomplete="current-password"
+                   autocapitalize="off" spellcheck="false">
+            <button type="button" id="pw-reveal" class="reveal" aria-pressed="false">보기</button>
+        </div>
         <p id="pw-error" class="error" hidden></p>
         <div class="row">
             <button type="button" id="pw-cancel" class="btn-ghost" style="flex:1">취소</button>
@@ -513,10 +538,31 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
     const openSheet = (id) => { $(id).dataset.open = '1'; };
     const closeSheet = (id) => { $(id).dataset.open = ''; };
 
+    /**
+     * 보기/숨기기 — type 을 password ↔ text 로 바꾼다.
+     * -webkit-text-security 로는 안 된다. Chrome 은 type=password 의 마스킹을
+     * 강제해서, none 을 줘도 computed 값이 disc 로 남는다 (실측).
+     */
+    function setRevealed(input, button, revealed) {
+        input.type = revealed ? 'text' : 'password';
+        button.textContent = revealed ? '숨기기' : '보기';
+        button.setAttribute('aria-pressed', String(revealed));
+    }
+
+    function bindReveal(input, button) {
+        button.addEventListener('click', () => {
+            setRevealed(input, button, input.type === 'password');
+            input.focus();
+        });
+    }
+
+    bindReveal($('pw'), $('pw-reveal'));
+
     function askPassword(action) {
         pendingAction = action;
         $('pw-error').hidden = true;
         $('pw').value = '';
+        setRevealed($('pw'), $('pw-reveal'), false);   // 보기 상태로 열리지 않게
         openSheet('pw-sheet');
         setTimeout(() => $('pw').focus(), 60);
     }
@@ -741,7 +787,7 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
             }
             session = null;
             MusingsCrypto.clearKeyCache();
-            toast(err.message);
+            toast(err.message || '알 수 없는 오류가 발생했습니다.');
         }
     }
 
@@ -794,10 +840,13 @@ description: 라도훈의 사색 노트 - 개발과 일, 그리고 일상에 대
             session = null;
             MusingsCrypto.clearKeyCache();
             const error = $('pw-error');
-            error.textContent = /decrypt|operation-specific/i.test(err.message)
+            // err.message 로 판단하면 안 된다 — Chrome 의 OperationError 는 message 가 비어 있다.
+            error.textContent = err.name === 'WrongPasswordError'
                 ? '비밀번호가 맞지 않습니다.'
-                : err.message;
+                : (err.message || '알 수 없는 오류가 발생했습니다.');
             error.hidden = false;
+            $('pw').value = '';
+            $('pw').focus();
         } finally {
             $('pw-ok').disabled = false;
         }

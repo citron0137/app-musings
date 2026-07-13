@@ -16,9 +16,12 @@
        "off" 는 제안하지 말라는 뜻이라, 안드로이드에서 매번 손으로 치게 된다.
        사이트 전체가 비밀번호 하나이므로 메모 시트에서 저장한 것이 여기에도 채워진다. -->
   <form class="locked-musing__form" hidden>
-    <input type="password" class="locked-musing__pw" name="password"
-           placeholder="비밀번호" autocomplete="current-password"
-           autocapitalize="off" spellcheck="false">
+    <span class="locked-musing__field">
+      <input type="password" class="locked-musing__pw" name="password"
+             placeholder="비밀번호" autocomplete="current-password"
+             autocapitalize="off" spellcheck="false">
+      <button type="button" class="locked-musing__reveal" aria-pressed="false">보기</button>
+    </span>
     <button type="submit">확인</button>
     <span class="locked-musing__error" hidden></span>
   </form>
@@ -64,9 +67,23 @@
     el.dataset.open = '';
   }
 
+  /**
+   * 보기/숨기기 — type 을 password ↔ text 로 바꾼다.
+   * -webkit-text-security 로는 안 된다. Chrome 은 type=password 의 마스킹을
+   * 강제해서, none 을 줘도 computed 값이 disc 로 남는다.
+   */
+  function setRevealed(el, revealed) {
+    const input = el.querySelector('.locked-musing__pw');
+    const button = el.querySelector('.locked-musing__reveal');
+    input.type = revealed ? 'text' : 'password';
+    button.textContent = revealed ? '숨기기' : '보기';
+    button.setAttribute('aria-pressed', String(revealed));
+  }
+
   function showForm(el) {
     el.querySelector('.locked-musing__error').hidden = true;
     el.querySelector('.locked-musing__form').hidden = false;
+    setRevealed(el, false);   // 보기 상태로 열리지 않게
     setTimeout(() => el.querySelector('.locked-musing__pw').focus(), 0);
   }
 
@@ -104,6 +121,12 @@
       tryOpen(el);
     });
 
+    el.querySelector('.locked-musing__reveal').addEventListener('click', () => {
+      const input = el.querySelector('.locked-musing__pw');
+      setRevealed(el, input.type === 'password');
+      input.focus();
+    });
+
     el.querySelector('.locked-musing__form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const input = el.querySelector('.locked-musing__pw');
@@ -115,8 +138,11 @@
         input.value = '';
         setOpen(el, text);
       } catch (err) {
-        showError(el, '비밀번호가 맞지 않거나 파일을 불러올 수 없습니다.');
+        showError(el, err.name === 'WrongPasswordError'
+          ? '비밀번호가 맞지 않습니다.'
+          : '노트를 불러올 수 없습니다.');
         input.value = '';
+        setRevealed(el, false);
         input.focus();
         cachedPassword = null;
         MusingsCrypto.clearKeyCache();
@@ -165,10 +191,17 @@
   align-items: center;
   flex-wrap: wrap;
 }
-.locked-musing__pw {
+/* 입력칸과 그 안에 겹쳐 앉는 보기/숨기기 버튼 */
+.locked-musing__field {
+  position: relative;
+  display: flex;
   flex: 1;
   min-width: 11rem;
+}
+.locked-musing__pw {
+  width: 100%;
   padding: 0.5rem 0.7rem;
+  padding-right: 3.6rem;   /* 보기 버튼 자리 */
   border: 1px solid var(--border-strong);
   border-radius: 0.5rem;
   background: var(--surface);
@@ -178,7 +211,24 @@
   outline: none;
 }
 .locked-musing__pw:focus { border-color: var(--accent); }
-.locked-musing__form button {
+.locked-musing__reveal {
+  position: absolute;
+  right: 0.3rem;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.3rem 0.5rem;
+  border: 0;
+  border-radius: 0.375rem;
+  background: none;
+  color: var(--text-3);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+.locked-musing__reveal:hover { color: var(--text-2); }
+.locked-musing__reveal:active { background: var(--surface-2); color: var(--text); }
+/* submit 만 파란 버튼이다 — 좁히지 않으면 보기 버튼까지 파랗게 칠해진다. */
+.locked-musing__form button[type="submit"] {
   padding: 0.5rem 1rem;
   border: 1px solid transparent;
   background: var(--accent);
@@ -189,7 +239,7 @@
   font-size: 0.875rem;
   font-weight: 600;
 }
-.locked-musing__form button:active { background: var(--accent-strong); }
+.locked-musing__form button[type="submit"]:active { background: var(--accent-strong); }
 .locked-musing__error { color: var(--err-text); font-size: 0.8125rem; flex-basis: 100%; }
 /* 열린 뒤에는 본문과 같은 결로 읽힌다 — 크기·행간을 .prose 에 맞춘다. */
 .locked-musing__content {

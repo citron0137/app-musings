@@ -18,6 +18,20 @@ window.MusingsCrypto = (function () {
   // 키는 (반복수, 용도, 비번) 조합으로 캐시 — 인메모리만. 새로고침하면 휘발된다.
   const keyCache = new Map();
 
+  /**
+   * 비밀번호가 틀렸을 때 던진다.
+   *
+   * WebCrypto 는 복호화 실패에 OperationError 를 주는데, Chrome 에서 이 에러의
+   * message 는 빈 문자열이다. 호출부가 err.message 를 보고 문구를 정하면 띄울 것이
+   * 없어서 빈 오류 상자만 열린다. 그래서 문자열이 아니라 타입으로 구분한다.
+   */
+  class WrongPasswordError extends Error {
+    constructor() {
+      super('비밀번호가 맞지 않습니다.');
+      this.name = 'WrongPasswordError';
+    }
+  }
+
   function b64ToBytes(s) {
     return Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
   }
@@ -74,9 +88,17 @@ window.MusingsCrypto = (function () {
     const sealed = new Uint8Array(data.length + tag.length);
     sealed.set(data);
     sealed.set(tag, data.length);
-    const plain = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv: b64ToBytes(blob.iv) }, key, sealed
-    );
+    let plain;
+    try {
+      plain = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: b64ToBytes(blob.iv) }, key, sealed
+      );
+    } catch (err) {
+      // AES-GCM 인증 태그 불일치 = 키가 틀렸다 = 비밀번호가 틀렸다.
+      // 그 밖의 실패(깨진 파일 등)는 그대로 올려보낸다.
+      if (err.name === 'OperationError') throw new WrongPasswordError();
+      throw err;
+    }
     return new TextDecoder().decode(plain);
   }
 
@@ -84,5 +106,5 @@ window.MusingsCrypto = (function () {
     keyCache.clear();
   }
 
-  return { encrypt, decrypt, clearKeyCache, ITERATIONS, LEGACY_ITERATIONS };
+  return { encrypt, decrypt, clearKeyCache, WrongPasswordError, ITERATIONS, LEGACY_ITERATIONS };
 })();
