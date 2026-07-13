@@ -29,7 +29,7 @@ const PASSWORD_FILE = path.join(LOCKED_DIR, 'password.txt');
 const OUT_FILE = path.join(ROOT, 'token.enc');
 
 const OWNER = 'citron0137';
-const REPO = 'app-musings';
+const REPO = 'site-musings';
 
 const MAX_EXPIRY_DAYS = 90;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -95,7 +95,7 @@ async function fetchExpiry(token) {
 async function main() {
   if (!fs.existsSync(TOKEN_FILE)) {
     console.error(`${TOKEN_FILE} 가 없습니다.`);
-    console.error('GitHub fine-grained PAT (app-musings 저장소 Contents 읽기/쓰기) 를 한 줄로 저장하세요.');
+    console.error('GitHub fine-grained PAT (site-musings 저장소 Contents 읽기/쓰기) 를 한 줄로 저장하세요.');
     process.exit(1);
   }
 
